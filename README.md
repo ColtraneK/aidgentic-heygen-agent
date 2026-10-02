@@ -47,18 +47,18 @@ Do the reading quietly, then give me under 150 words: Verdict (safe / safe with 
 
 ## Install
 
-1. **Customize** in the left sidebar
-2. **Plugins** tab, then **+**
-3. **Add marketplace**, and paste `ColtraneK/aidgentic-heygen-agent`
-4. Install **aidgentic-heygen-agent** and make sure the toggle is **on**
-5. Open the plugin's **Connectors** tab. Next to **HeyGen**, click **Add** if you see it, then **Connect**. Sign in to HeyGen and click **Approve**.
+1. **Customize** in the left sidebar, then the **Plugins** tab
+2. **Add** (top right), then **Add marketplace**, then **Add from a repository**
+3. Paste `ColtraneK/aidgentic-heygen-agent` and click **Sync**
+4. **Aidgentic heygen agent** appears in the list. Click **Add**, and make sure its toggle is **on**
+5. Open the plugin's **Connectors** tab. Next to **HeyGen MCP**, click **Connect**. Sign in to HeyGen and click **Approve**. When it says **Connected**, you're done.
 
 No API key. The HeyGen sign-in is the whole connection.
 
 ### Or install from a downloaded copy
 
 1. On this page, **Code**, then **Download ZIP**
-2. **Customize** → **Plugins** → **+** → **Upload plugin**, and choose the zip
+2. **Customize** → **Plugins** → **Add** → **Upload plugin**, and choose the zip
 3. Toggle it **on**, then connect HeyGen as in step 5 above
 
 A downloaded copy doesn't update itself. Download it again for a newer version.
