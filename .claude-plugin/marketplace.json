@@ -1,0 +1,15 @@
+{
+  "name": "aidgentic-heygen",
+  "description": "A HeyGen video agent for Claude, from Aidgentic.",
+  "owner": {
+    "name": "Aidgentic",
+    "url": "https://aidgentic.com"
+  },
+  "plugins": [
+    {
+      "name": "aidgentic-heygen-agent",
+      "description": "A video agent for HeyGen. It reads your website, plans videos from your own content, shows you the cost and asks before it spends a credit, renders with your avatar, voice and generated b-roll, and keeps a content plan running on a schedule.",
+      "source": "./"
+    }
+  ]
+}
