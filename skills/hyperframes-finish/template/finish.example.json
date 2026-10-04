@@ -1,0 +1,40 @@
+{
+  "brand": {"name": "Your Brand", "bg": "#101418", "fg": "#ffffff", "accent": "#3b82f6", "onAccent": "#ffffff"},
+  "style": "bold",
+  "captionScenes": [2, 3, 4],
+  "overlays": [
+    {"type": "headline", "start": 0, "end": 3.8, "size": "big",
+     "lines": [{"text": "A hook line", "at": 0.2, "step": 0.25}, {"text": "from the script.", "at": 1.4, "step": 0.2}],
+     "emphasize": {"line": 1, "word": 2, "at": 2.6}},
+    {"type": "reveal", "start": 3.9, "end": 6.0, "kicker": "INTRODUCING", "kickerAt": 3.9, "title": "Product", "titleAt": 4.8},
+    {"type": "headline", "start": 6.1, "end": 11.0, "size": "mid", "lines": [{"text": "A short promise", "at": 6.2, "step": 0.15}]},
+    {"type": "counter", "start": 7.5, "end": 11.0, "value": "1,250", "label": "customers", "at": 7.7,
+     "pills": [{"text": "Option A", "at": 9.6}, {"text": "Option B", "at": 10.0}]},
+    {"type": "search", "start": 11.1, "end": 15.0, "placeholder": "Search…", "typed": "what they look for", "typeAt": 12.0, "typeDur": 1.0,
+     "ticks": [{"text": "First benefit", "at": 13.2}, {"text": "Second benefit", "at": 13.6}], "footer": {"text": "up front", "at": 14.3}},
+    {"type": "chips", "start": 15.1, "end": 18.0, "sub": {"text": "One line that sets it up.", "at": 15.2}, "joiner": "or",
+     "chips": [{"text": "this", "at": 16.2}, {"text": "that", "at": 16.8}]},
+    {"type": "check", "start": 18.1, "end": 19.5, "text": "A short reassurance.", "at": 18.2},
+    {"type": "headline", "start": 19.6, "end": 21.8, "size": "slam", "pos": "bottom",
+     "lines": [{"text": "Three big", "at": 19.7, "step": 0.35}, {"text": "words.", "at": 20.6}],
+     "emphasize": {"line": 1, "word": 0, "at": 21.0}},
+    {"type": "rail", "start": 21.9, "end": 24.5, "kicker": "From start to finish", "kickerAt": 22.0, "title": "One step.", "titleAt": 23.4,
+     "left": "start", "right": "done", "fillAt": 22.2, "fillDur": 1.3},
+    {"type": "checklist", "start": 24.6, "end": 29.0, "title": "How it works", "meta": "every time",
+     "rows": [{"text": "First proof point", "at": 25.4}, {"text": "Second proof point", "at": 26.4, "tag": "DONE"}],
+     "result": {"text": "The payoff line.", "badge": "READY", "at": 27.6}},
+    {"type": "headline", "start": 29.1, "end": 31.0, "size": "big",
+     "lines": [{"text": "Call to", "at": 29.2, "step": 0.16}, {"text": "action.", "at": 29.9, "step": 0.2, "size": "huge"}]},
+    {"type": "outro", "start": 31.1, "end": 34.0, "lines": ["Your call", "to action."], "logoAt": 31.2, "linesAt": 31.5}
+  ],
+  "hooks": [
+    {"name": "B", "until": 3.8, "overlays": [
+      {"type": "headline", "start": 0, "end": 3.8, "size": "big",
+       "lines": [{"text": "1,250", "at": 0.2, "size": "huge"}, {"text": "customers so far.", "at": 0.9, "step": 0.2}]}]},
+    {"name": "C", "until": 3.8, "overlays": [
+      {"type": "headline", "start": 0, "end": 3.8, "size": "slam",
+       "lines": [{"text": "A different", "at": 0.2, "step": 0.3}, {"text": "first line.", "at": 1.2, "step": 0.3}],
+       "emphasize": {"line": 1, "word": 0, "at": 2.0}}]}
+  ],
+  "cover": {"lines": ["A hook line", "from the script."], "footer": "Your call to action."}
+}

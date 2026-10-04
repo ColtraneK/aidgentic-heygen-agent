@@ -12,7 +12,7 @@ Read this before planning or rendering anything. It's the craft and the mechanic
 - the presenter comes from avatar looks already in their HeyGen account
 - the finished video is a link to their HeyGen library
 
-Never try to download a render, save it to the Project, or move it through Google Drive or anywhere else. Never ask them to upload a photo through the chat. Photos go into HeyGen through the HeyGen app (Avatars, then Create, then Photo avatar).
+Never try to download a render, save it to the Project, or move it through Google Drive or anywhere else. The one exception is the `hyperframes-finish` skill, in a session that can download files: it downloads the finished Studio render and its captions to build an animated cut locally. Never ask them to upload a photo through the chat. Photos go into HeyGen through the HeyGen app (Avatars, then Create, then Photo avatar).
 
 ---
 
@@ -69,6 +69,7 @@ Beat types:
 | `b-roll` | a generated clip that shows the line | their voice over it |
 | `you-in-scene` | a generated clip of them doing something, from their own look | their voice over it |
 | `end-card` | a generated clip that reveals their web address, or a final avatar beat | their voice |
+| `graphics` | only with the HyperFrames finish: the plain graphics plate, which the finish fills with a full-screen graphic (see `motion-graphics.md`) | their voice |
 
 ---
 
@@ -82,7 +83,7 @@ Settings: `aspectRatio` to match the video (`9:16` vertical, `16:9` landscape, `
 
 1. **Subject and action.** Who or what, doing what, in one clear motion. "A woman in her late twenties closes her laptop, leans back and lifts her coffee."
 2. **Setting.** Where, what's around, time of day.
-3. **Camera.** Name a real camera and lens and keep it still: "shot on ARRI Alexa Mini LF with a 50mm lens at T2, locked-off static camera, shallow depth of field".
+3. **Camera.** Name a real camera and lens and keep it still: "shot on ARRI Alexa Mini LF with a 50mm lens at T2, locked-off static camera, shallow depth of field". When the finish puts a graphic at the top of this beat, add "Frame the subject in the middle and lower part of the frame and keep the top third calm and uncluttered."
 4. **Light and grade.** "soft window light from the left, warm natural colour grade".
 5. **Brand colour, woven in.** Put their accent colour into the scene (a lit screen, a notebook, a beam of light) rather than over it.
 6. **The no-text line, every time:** "No logos, brand names, printed words or badges anywhere in frame."
@@ -132,6 +133,8 @@ One call, all beats in order.
 - b-roll, "you in a scene", and end-card beats:
   `{"type": "video", "source": {"type": "url", "url": <video_url from get_model_video>}, "script": "...", "voice_id": <voice id>, "playback": {"mode": "loop", "volume": 0.2}}`
   Keep the clip's own sound under the voice, at 0.15 to 0.3. An end card can go higher, 0.5 to 0.6.
+- Graphics-only beats (with the HyperFrames finish):
+  `{"type": "image", "source": {"type": "asset_id", "asset_id": <graphics plate from Video Profile.md>}, "script": "...", "voice_id": <voice id>}`
 - Top level: `aspectRatio` to match, `resolution: "1080p"`, `caption: {"style": "default"}`, and a `title` like "[Business] · [angle] · [date]".
 
 The narration sets each scene's length; clips loop under it. Avatar beats in Studio take a solid colour background only, so the look's own photo background is what shows. That's fine. The b-roll brings the variety.
@@ -149,6 +152,8 @@ When they like the video but one beat is off, don't re-render everything:
 - **The end card is misspelled:** regenerate that clip with a new seed, or swap it for an avatar beat.
 
 Every reassembly is a new render, so it still needs a yes and a cost.
+
+When the video has a HyperFrames finish, skip the reassembly. Regenerate only the one clip, or render only the one avatar line with `create_video_from_avatar`, and swap it into the finish locally (see the `hyperframes-finish` skill). The cost is that clip or line alone.
 
 ---
 
