@@ -92,14 +92,15 @@ About twelve minutes, and nothing in setup spends credits.
 
 **Starting in Cowork is fine.** Do setup, plans and renders there as usual. After each render, the agent checks whether the finish can run. If it can't, it gives you the plain HeyGen video straight away and saves a handoff folder with everything the finish needs. Then:
 
-1. Open the **Code** tab in the Claude desktop app and choose a folder on your computer.
-2. Put the handoff folder in it.
-3. First time only, add the plugin there: `/plugin marketplace add ColtraneK/aidgentic-heygen-agent`, then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`.
-4. Type **finish the video in HANDOFF.md**.
+1. Make a folder on your computer and put the handoff folder in it.
+2. Open that folder in the **Code** tab of the Claude desktop app.
+3. Type **finish the video in HANDOFF.md**.
+
+Claude Code does the rest. The first time, it fetches the finish tools from this repo and installs ffmpeg if your computer doesn't have it, so there's no plugin to install.
 
 The finished video, its other openings and its cover are saved next to the note. The HeyGen links in the note work for about a week. No credits are spent in Claude Code; the finish is free.
 
-**Or do everything in Claude Code.** Install the plugin there (step 3), connect HeyGen with `/mcp`, and run `/video-setup` in a folder. Everything works in one place, but a scheduled routine can't reach a folder on your computer, so keep the routine in a Cowork Project.
+**Or do everything in Claude Code.** Install the plugin there (`/plugin marketplace add ColtraneK/aidgentic-heygen-agent`, then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`), connect HeyGen with `/mcp`, and run `/video-setup` in a folder. Everything works in one place, but a scheduled routine can't reach a folder on your computer, so keep the routine in a Cowork Project.
 
 ---
 

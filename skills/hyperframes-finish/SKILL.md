@@ -28,10 +28,11 @@ python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/preflight.py --
 
 > Your video's ready in HeyGen: [video_page_url]. The animated finish needs Claude Code, because it runs a video renderer this session can't. I've saved everything it needs in `Finish handoff/[date] [angle]/`. To finish it:
 >
-> 1. Open the **Code** tab in the Claude desktop app and choose a folder on your computer (any empty folder is fine).
-> 2. Put the `Finish handoff/[date] [angle]` folder in it.
-> 3. First time only: add the plugin there, by typing `/plugin marketplace add ColtraneK/aidgentic-heygen-agent` and then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`.
-> 4. Type: **finish the video in HANDOFF.md**
+> 1. Make a folder on your computer and put the `Finish handoff/[date] [angle]` folder in it.
+> 2. Open that folder in the **Code** tab of the Claude desktop app.
+> 3. Type: **finish the video in HANDOFF.md**
+>
+> Claude Code does the rest, including getting the finish tools the first time.
 >
 > The HeyGen links in it work for about a week.
 
@@ -44,7 +45,7 @@ Write `Finish handoff/[date] [angle]/HANDOFF.md`, and copy `Video Profile.md` an
 ````markdown
 # Finish handoff: [title]
 
-Read this, `Video Profile.md` and `[plan].md`, then run the `hyperframes-finish` skill from the aidgentic-heygen-agent plugin, starting at step 2. Everything from step 1 is below; HeyGen isn't needed. Save the results in this folder.
+Read this, `Video Profile.md` and `[plan].md`, then run the `hyperframes-finish` skill from the aidgentic-heygen-agent plugin, starting at step 2. If the plugin isn't installed here, don't ask the user to install it: clone https://github.com/ColtraneK/aidgentic-heygen-agent (public) next to this folder and follow `skills/hyperframes-finish/SKILL.md` from it. Install ffmpeg if it's missing. Everything from step 1 is below; HeyGen isn't needed. Save the results in this folder.
 
 - **Render:** [video_url] (expires about [date + 7 days])
 - **Captions:** [subtitle_url]
@@ -63,7 +64,7 @@ Pick the music track before handing off, while HeyGen is connected, so Claude Co
 
 ### Running from a handoff note
 
-In Claude Code, when they say "finish the video in HANDOFF.md", take step 1's inputs from the note and the files beside it, and do steps 2 to 6 there. Save the results next to the note (or into their Project's `Videos/` if this session can reach it) and tell them where. If preflight fails here too, say which check failed. A missing ffmpeg is fixed by installing it (`brew install ffmpeg` on a Mac, `winget install ffmpeg` on Windows).
+In Claude Code, when they say "finish the video in HANDOFF.md", take step 1's inputs from the note and the files beside it, and do steps 2 to 6 there. Save the results next to the note (or into their Project's `Videos/` if this session can reach it) and tell them where. Without the plugin installed, clone the public repo (ColtraneK/aidgentic-heygen-agent) and use its `skills/hyperframes-finish/` template; never send the user off to install it. If preflight fails, fix what you can yourself: install a missing ffmpeg (`brew install ffmpeg` on a Mac, `winget install ffmpeg` on Windows) or Node. Only a blocked download is theirs to fix; say which check failed.
 
 Tell them what's happening and that it's free: *"Now I'm adding the motion graphics here. This part doesn't use credits and takes a few minutes."*
 
