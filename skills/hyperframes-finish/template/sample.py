@@ -5,6 +5,8 @@
       [--on-accent "#ffffff"] [--logo URL] [--heading-font Inter] [--mono-font "Geist Mono"] \
       [--headline "Two short lines|from their site"] [--number "1,250"] [--label "customers"] \
       [--pills "Two things|they offer"]
+  python3 sample.py OUT ... --look LOOK.css [--style clean]     one frame in a look made from their references
+
 
 Builds one graphics-only frame per style (Bold, Clean, Editorial) with a
 headline and a number from their own site, snapshots each, and writes
@@ -35,6 +37,8 @@ def main():
     ap.add_argument("--number", default="1,250")
     ap.add_argument("--label", default="a number from your site")
     ap.add_argument("--pills", default="", help="up to three short words from their site, split by |")
+    ap.add_argument("--look", help="a look's CSS file: preview just that look, over --style")
+    ap.add_argument("--style", default="clean", help="with --look: the base style it moves like")
     a = ap.parse_args()
 
     work = os.path.abspath(a.out)
@@ -48,6 +52,7 @@ def main():
     last = len(lines) - 1
     json.dump({"brand": {"name": a.name, "bg": a.bg, "fg": a.fg, "accent": a.accent, "onAccent": a.on_accent or a.bg},
                "captionScenes": [],
+               **({"look": {"name": "look", "css": os.path.abspath(a.look)}} if a.look else {}),
                "overlays": [
                    {"type": "headline", "start": 0, "end": dur, "size": "big",
                     "lines": [{"text": t, "at": 0.15 + 0.7 * k, "step": 0.12} for k, t in enumerate(lines)],
@@ -57,16 +62,19 @@ def main():
               open(os.path.join(work, "finish.json"), "w"), indent=2)
 
     shots = []
-    for style in ("bold", "clean", "editorial"):
+    for style in ((a.style,) if a.look else ("bold", "clean", "editorial")):
         subprocess.run([sys.executable, os.path.join(HERE, "build.py"), work, "--style", style], check=True)
         snaps = os.path.join(work, "project", "snapshots")
         shutil.rmtree(snaps, ignore_errors=True)
         subprocess.run(HF + ["snapshot", "--at", "4.2", "--no-end", "--describe", "false"],
                        cwd=os.path.join(work, "project"), check=True, capture_output=True)
         png = sorted(glob.glob(os.path.join(snaps, "frame-*.png")))[0]
-        dest = os.path.join(work, f"style-{style}.png")
+        dest = os.path.join(work, "look.png" if a.look else f"style-{style}.png")
         shutil.copy(png, dest)
         shots.append(dest)
+    if a.look:
+        print(f"wrote {work}/look.png")
+        return
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *sum((["-i", p] for p in shots), []), "-filter_complex",
                     "[0]scale=540:960[a];[1]scale=540:960[b];[2]scale=540:960[c];[a][b][c]hstack=3",
                     "-q:v", "3", os.path.join(work, "styles.jpg")], check=True)

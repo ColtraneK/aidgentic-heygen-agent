@@ -9,6 +9,8 @@ Usage:
   python3 build.py WORKDIR --hook B        the same cut with opening "B" from finish.json's hooks
   python3 build.py WORKDIR --style clean   override finish.json's style (bold, clean, editorial)
   python3 build.py WORKDIR --cover         also write WORK/cover/, a one-frame cover for the post
+  python3 build.py WORKDIR --guides        tint the areas Reels, TikTok and Shorts cover with their buttons
+                                           and captions, for checking the preview sheet. Rebuild without it to render.
 
 It also writes WORK/preview-times.txt: the moment each overlay has fully landed,
 plus every scene without one, for the preview sheet, and WORK/sfx-cues.json:
@@ -22,6 +24,7 @@ ap.add_argument("work")
 ap.add_argument("--hook")
 ap.add_argument("--style")
 ap.add_argument("--cover", action="store_true")
+ap.add_argument("--guides", action="store_true")
 args = ap.parse_args()
 work = os.path.abspath(args.work)
 proj = os.path.join(work, "project")
@@ -162,15 +165,16 @@ def screen(o, oid, st, en):
     rw, rh = probe(out)
     pos = o.get("pos", "center")
     on_avatar = scene_at(st + 0.01)["kind"] == "avatar"
-    # Room on screen: the middle band, below a top graphic and above the captions, or a
-    # band at the top or bottom. On an avatar beat only the band above the card is free.
-    max_h = 330 if on_avatar else 1060 if pos == "center" else 620
-    w = min(o.get("width", 900), 1000)
+    # Room on screen, inside the apps' safe zones: the middle band, below a top graphic
+    # and above the captions, or a band at the top or bottom. On an avatar beat only
+    # the band above the card is free.
+    max_h = 330 if on_avatar else 940 if pos == "center" else 600
+    w = min(o.get("width", 880), 880)
     h = round(w * rh / rw)
     if h > max_h:
         h, w = max_h, round(max_h * rw / rh)
-    left = (1080 - w) // 2
-    top = {"top": 220, "bottom": 1920 - 300 - h}.get("top" if on_avatar else pos, 560 + (1060 - h) // 2)
+    left = 70 + (890 - w) // 2
+    top = {"top": 220, "bottom": 1920 - 400 - h}.get("top" if on_avatar else pos, 560 + (940 - h) // 2)
     d = r3(en - st)
     E.append(f'<video id="{oid}v" class="clip scr" style="inset:auto;left:{left}px;top:{top}px;width:{w}px;height:{h}px" src="{name}" muted playsinline data-start="{r3(st)}" data-duration="{d}" data-track-index="13"></video>')
     marks = []
@@ -373,6 +377,12 @@ face = "".join(
 vars_css = (f':root {{ --bg: {brand["bg"]}; --fg: {brand["fg"]}; --accent: {brand["accent"]}; --on-accent: {brand.get("onAccent", brand["bg"])};'
             f' --heading: "{fonts["heading"]["family"]}", ui-sans-serif, system-ui, sans-serif; --mono: "{fonts["mono"]["family"]}", ui-monospace, monospace; }}\n')
 css = face + vars_css + open(os.path.join(HERE, "style.css")).read()
+# A look: the person's own visual language, from reference images they sent. It is
+# CSS laid over the base style, which still decides how things move.
+look = fin.get("look") or {}
+if look.get("css"):
+    lp = look["css"] if os.path.isabs(look["css"]) else os.path.join(work, look["css"])
+    css += f"\n/* look: {look.get('name', os.path.basename(lp))} */\n" + open(lp).read()
 
 def page(duration, body, tweens):
     return f'''<!doctype html>
@@ -411,9 +421,15 @@ if os.path.exists(os.path.join(proj, "assets", "narration.m4a")):
 if os.path.exists(os.path.join(proj, "assets", "music.m4a")):
     # Mixed and ducked under the voice by music.py.
     audio.append(f'<audio id="music" src="assets/music.m4a" data-start="0" data-duration="{TOTAL}" data-track-index="12" data-volume="1"></audio>')
-body = "\n".join(audio + E + [f'<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>'])
+guides = []
+if args.guides:
+    # Where the apps' own buttons, names and captions sit on a 9:16 post (the union of
+    # Reels, TikTok and Shorts). Nothing that has to be read should land in the tint.
+    guides.append(f'<div id="safe" class="clip fx guides" data-start="0" data-duration="{TOTAL}" data-track-index="99">'
+                  '<i class="g-top"></i><i class="g-bottom"></i><i class="g-right"></i></div>')
+body = "\n".join(audio + E + [f'<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>'] + guides)
 write_project(proj, page(TOTAL, body, "\n".join(T)), "finish")
-print(f"wrote {proj}/index.html: style {STYLE}{', hook ' + args.hook if args.hook else ''}, {len(E)} elements, {len(T)} tweens, {ci} captions")
+print(f"wrote {proj}/index.html: style {STYLE}{', look ' + look.get('name', '') if look.get('css') else ''}{', hook ' + args.hook if args.hook else ''}, {len(E)} elements, {len(T)} tweens, {ci} captions{', SAFE-ZONE GUIDES ON (do not render)' if args.guides else ''}")
 
 # ---------- preview times: each overlay once it has fully landed, and every scene ----------
 def landed(o):

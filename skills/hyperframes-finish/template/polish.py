@@ -4,6 +4,7 @@
   python3 polish.py WORK --in finish.mp4 --out final.mp4
   python3 polish.py WORK --in finish.mp4 --out final.mp4 --speed 1.1
   python3 polish.py WORK --sound pop=URL_OR_FILE [--sound whoosh=...]   swap in a sound, then polish as usual
+  python3 polish.py WORK --in finish.mp4 --stems OUTDIR                  the parts, for someone finishing it in an editor
 
 Sound effects come from WORK/sfx-cues.json, which build.py writes on every
 build: a whoosh on each cut and screen recording, a pop when a word, chip or
@@ -16,6 +17,10 @@ HeyGen's sound library.
 The speed comes from --speed, else finish.json's "speed", else 1. It speeds up
 picture and voice together without changing the pitch: 1.1 sounds natural for a
 voice clone that reads slowly. finish.json's "sfx": "off" leaves sounds out.
+
+--stems writes the pieces separately, at the render's own speed, for anyone who
+would rather do the sound, music and timing themselves: the picture with no
+sound, the voice, the music bed, the sound effects alone, and the captions.
 """
 import argparse, array, json, os, re, shutil, subprocess, urllib.request
 
@@ -68,12 +73,42 @@ def peak(path):
     i = max(range(len(a)), key=lambda k: abs(a[k]))
     return i / 8000
 
+def stems(work, inp, outdir):
+    os.makedirs(outdir, exist_ok=True)
+    assets = os.path.join(work, "project", "assets")
+    run(["ffmpeg", "-y", "-loglevel", "error", "-i", inp, "-an", "-c:v", "copy", os.path.join(outdir, "picture (no sound).mp4")])
+    made = ["picture (no sound).mp4"]
+    for src, name in (("narration.m4a", "voice.m4a"), ("music.m4a", "music.m4a")):
+        if os.path.exists(os.path.join(assets, src)):
+            shutil.copy(os.path.join(assets, src), os.path.join(outdir, name))
+            made.append(name)
+    cues_path = os.path.join(work, "sfx-cues.json")
+    cues = json.load(open(cues_path))["cues"] if os.path.exists(cues_path) else []
+    if cues:
+        ensure_sounds(work)
+        dur = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", inp]).stdout)
+        ins, graph = [], []
+        for k, c in enumerate(cues):
+            ins += ["-i", sound_path(work, c["sound"])]
+            ms = max(0, int((c["at"] - peak(sound_path(work, c["sound"]))) * 1000))
+            graph.append(f"[{k}:a]aformat=sample_rates=48000:channel_layouts=stereo,adelay={ms}|{ms},volume={c['volume']}[s{k}]")
+        graph.append("".join(f"[s{k}]" for k in range(len(cues))) + f"amix=inputs={len(cues)}:normalize=0,apad=whole_dur={dur:.3f}[out]")
+        run(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", ";".join(graph), "-map", "[out]", "-t", f"{dur:.3f}",
+             os.path.join(outdir, "sound effects.wav")])
+        made.append("sound effects.wav")
+    subs = os.path.join(work, json.load(open(os.path.join(work, "scenes.json"))).get("subs") or "subs.srt")
+    if os.path.exists(subs):
+        shutil.copy(subs, os.path.join(outdir, "captions.srt"))
+        made.append("captions.srt")
+    print(f"stems in {outdir}: {', '.join(made)} (at the render's own speed; the picture already has its captions drawn in)")
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("work")
     ap.add_argument("--in", dest="inp", help="the rendered cut, e.g. WORK/finish.mp4")
     ap.add_argument("--out", help="where the polished cut goes")
     ap.add_argument("--speed", type=float, help="1 is as rendered; 1.05 to 1.15 for a slow voice")
+    ap.add_argument("--stems", metavar="OUTDIR", help="write the picture, voice, music, sound effects and captions separately")
     ap.add_argument("--sound", action="append", default=[], metavar="NAME=URL_OR_FILE",
                     help=f"replace a sound: one of {', '.join(SOUNDS)}")
     a = ap.parse_args()
@@ -88,6 +123,8 @@ def main():
         if a.sound:
             return
         raise SystemExit("pass --in and --out")
+    if a.stems:
+        return stems(work, a.inp, a.stems)
     if not a.out:
         raise SystemExit("pass --out")
 

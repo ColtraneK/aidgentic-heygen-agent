@@ -144,7 +144,7 @@ Write the **Finish** section with the style, the music mood and the plate's asse
 
 **It can't run here.** Describe the three styles in one line each and ask the same question. Write the style and music mood, and leave the plate line empty. The finish runs later, in a session that can.
 
-Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice."*
+Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice. If there's a look you love, send me screenshots any time and I'll make your videos look like that."* Don't ask for them now.
 
 ---
 
@@ -240,6 +240,7 @@ HyperFrames finish by default (the `hyperframes-finish` skill), where the sessio
 **Music:** [none / a mood, e.g. "warm and upbeat"]
 **Graphics plate:** `[asset_id]` (a plain [bg hex] image for graphics-only beats)
 **Sound effects:** on · **Speed:** 1 (1.05 to 1.15 if the voice reads slowly)
+**Look:** none yet (made from reference images they send, in `Video Styles/Looks/`)
 
 ## Voice rules for scripts
 First person. Plain speech, contractions, short sentences. Numbers as they'd say them. No claims the sources don't make.

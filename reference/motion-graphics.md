@@ -33,6 +33,10 @@ Keep words short. A headline line is at most about 18 characters at `big` and 12
 - **Graphics-only beats:** anything, and a `headline` can sit in the middle (`"pos": "center"`).
 - At most two graphics on one beat, and never two that both sit at the top.
 
+## Custom moments
+
+Each video also gets one or two moments designed from scratch for its own lines (a `raw` overlay; the `hyperframes-finish` skill says how). The types above are the floor, not the ceiling. In the beat sheet, a custom moment's *Graphic* is `custom:` and the idea in a few words: "custom: a toggle flips to OFF".
+
 ## Screen recordings
 
 Nothing proves "here's where the setting is" like the setting itself. When a line points at something on a screen, plan a `screen` graphic and ask for the recording when you show the plan: *"Beat 3 shows the real click path. Record your screen going Settings, then Data controls (a phone or desktop recording is fine) and drop it here."* No recording by render time: use a `search` or `chips` mock-up instead and say so.

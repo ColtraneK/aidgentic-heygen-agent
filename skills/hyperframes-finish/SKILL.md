@@ -24,6 +24,7 @@ Tell them what's happening and that it's free: *"Now I'm adding the motion graph
 - **The brand:** `get_brand_kit` with the ID in `Video Profile.md`. Take the darkest colour as `bg`, a light colour as `fg`, the strongest brand colour as `accent`, and whichever of `bg`/`fg` reads best on the accent as `onAccent`. Take the primary logo URL and the font names. Never invent a colour, logo or font the kit doesn't have; with no logo the template draws a letter monogram.
 - **The plan:** from the beat sheet, the 1-based scene numbers of the avatar beats and the graphics-only beats, each beat's Graphic, the other hooks, and the style and music. A plan made before graphics were planned has no Graphic column: pick them now from `motion-graphics.md`.
 - **Style and music:** the plan's, else the profile's **Finish** section. No style anywhere means Bold, and no music means none.
+- **Their look, if they have one:** the **Look** line under **Finish** names a CSS file in `Video Styles/Looks/`, made from reference images they sent (see *A look from their references*). Copy it into `WORK/` and set `look` in the spec. No look: the style alone.
 
 ## 2. Prepare
 
@@ -51,7 +52,8 @@ It loops or trims the track to the video, fades it, and ducks it under the voice
 Write `WORK/finish.json`. `TPL/finish.example.json` shows every field. Times are in seconds on the render's own clock: read them from `scenes.json` and `WORK/subs.srt` so each word lands as it's said.
 
 - `brand`: `name`, `bg`, `fg`, `accent`, `onAccent`, and optionally `logoPlate` (`light`, `dark` or `none`) to override prep's guess.
-- `style`: `bold`, `clean` or `editorial`.
+- `style`: `bold`, `clean` or `editorial`. With a look, the style still sets how things move.
+- `look`: optional, `{"name": "...", "css": "look.css"}`. Its CSS is laid over the base style.
 - `captionScenes`: the scenes that get word-by-word captions. Leave out scenes whose overlay already says the line.
 - `overlays`: the plan's graphics, one or two per scene, placed as `motion-graphics.md` says. On a graphics-only scene a headline can use `"pos": "center"`.
 - `hooks`: the other openings, if the plan has them. Each has a `name` (`B`, `C`) and its `overlays` for the first beat. Optionally it has `until`, the time up to which its overlays replace the main ones (the end of scene 1 by default).
@@ -77,10 +79,22 @@ A `screen` overlay takes `file` (a path in the work folder or a URL; any common 
 
 Every word on screen follows ground rule 4: it comes from the script or the source, word for word for numbers and names. Keep each overlay to a few words. The narration carries the detail.
 
+### Custom moments
+
+Every video gets one or two moments designed from scratch for it, on top of the graphic types, so no two videos look alike. Don't ask about them; they appear in the preview sheet like any other graphic, and they change them the same way.
+
+- Pick the one or two lines that carry the video: the surprising number, the thing they should do, the before and after. Prefer graphics-only and b-roll beats, where the whole frame is free.
+- Picture the idea before building it, in a sentence: what's on screen and what the camera does ("a dial for the setting, pushing in as it turns off"; "ten bars growing from zero, the tallest one lit in the accent"). Name the move: push in, pull out, pan, static with things fading in. "Make it cinematic" isn't a direction.
+- Build it as a `raw` overlay, 4 to 10 seconds, in the brand's colours and fonts (`var(--bg)`, `var(--fg)`, `var(--accent)`, `var(--heading)`, `var(--mono)`) and the person's look if they have one. Each element is a top-level clip with a unique `id`, `class="clip"`, `data-start`, `data-duration` and a `data-track-index` from 20 up; its tweens are GSAP calls on `tl` at absolute times. Add `sfx` cues for its key moments.
+- Same rules as every graphic: words from the script or source, nothing over a face, everything that has to be read inside the safe zones.
+- Images they gave you (a product shot, a cut-out PNG) can go in it: copy them into `WORK/project/assets/` and use `assets/<name>`.
+
+The toggle that flips to OFF in the first "AI training privacy switch" video is one: a pill and a knob, the knob sliding over as the pill dims, a ring pulsing out and "OFF" slamming in, with a click on the flip.
+
 ## 4. Build and preview
 
 ```bash
-python3 TPL/build.py WORK --cover
+python3 TPL/build.py WORK --cover --guides
 cd WORK/project
 npx --yes hyperframes@0.8.115 lint                       # 0 errors before going on
 npx --yes hyperframes@0.8.115 snapshot --at "$(cat ../preview-times.txt)" --no-end --describe false
@@ -88,9 +102,9 @@ npx --yes hyperframes@0.8.115 snapshot --at "$(cat ../preview-times.txt)" --no-e
 
 `build.py` writes `preview-times.txt`: the moment each graphic has fully landed, plus every scene without one. The snapshot command saves one frame per moment and a contact sheet in `snapshots/`. If `snapshot` or `render` says Chrome is missing, run `npx --yes hyperframes@0.8.115 browser ensure` once.
 
-Look at every frame yourself first. Check for text running off the frame, a graphic over a face, the logo readable against the background, and every word spelled right. Fix the spec and rebuild until it's clean.
+Look at every frame yourself first. `--guides` tints the top, bottom and right edges, where Reels, TikTok and Shorts put their own buttons, names and captions. Check that no word, number or logo sits in the tint (a face or a background running under it is fine), then check for text running off the frame, a graphic over a face, the logo readable against the background, and every word spelled right. Fix the spec and rebuild until it's clean. For a video that won't be posted to a vertical feed (a website, a course), skip the tint check.
 
-Then show them the contact sheet. Save it as `Video Plans/[date] [angle] preview.jpg` and ask, clickable:
+Then rebuild without `--guides` (`python3 TPL/build.py WORK --cover`) and snapshot again for them: the tint is only for you. Show them the contact sheet. Save it as `Video Plans/[date] [angle] preview.jpg` and ask, clickable:
 
 > Here's every graphic in your finish, in order. It's free to change anything now.
 >
@@ -116,6 +130,21 @@ Polish each cut straight after rendering it: each opening has its own sound cues
 
 **Sounds.** `polish.py` makes four short sounds (whoosh, pop, click, chime) itself, so it never waits on a download. For richer ones, search HeyGen's library with `search_audio_sounds` for each, and pass the ones you like once: `python3 TPL/polish.py WORK --sound whoosh="<url>" --sound pop="<url>"`. They're kept in `WORK/sfx/` and travel with the source, so later fixes sound the same. Like music, what they can do with a library sound is between them and HeyGen.
 
+## A look from their references
+
+If they send reference images (screenshots, a Pinterest board, frames from videos they like), or say "make it look like" something, make them a look. Never ask for references; setup only mentions they can send them.
+
+1. Study the images: the palette, the type (weight, width, case, spacing), shapes and corners, texture and depth (flat, glass, grain, paper), how busy the frame is, and how things probably move. If they name a visual language (data-journalism charts, glassy Apple-style panels, luxury fashion, a clean startup look, slow documentary call-outs), use what that's known for.
+2. Write it as CSS over the base style: `Video Styles/Looks/[name].css`, with a short `[name].md` beside it saying what it took from which image. Keep their brand colours and logo unless they ask otherwise; a look changes the treatment, not the brand. It can restyle any class in `style.css`, and its custom moments can use its own motifs.
+3. Preview it in one frame with their words: `python3 TPL/sample.py LOOK --look "Video Styles/Looks/[name].css" --style [closest base] ...` (the same brand arguments as setup). Show `LOOK/look.png`.
+4. On a yes, write it to **Finish** in the profile: `**Look:** [name] (Video Styles/Looks/[name].css), over [style]`. They can keep several and name one per video ("use the glass look").
+
+## For someone finishing it themselves
+
+Only when they ask (they have an editor, or want to do the sound and timing by hand): after rendering, `python3 TPL/polish.py WORK --in WORK/finish.mp4 --stems "Videos/[date] [angle] - parts"`. It writes the picture without sound, the voice, the music, the sound effects alone and the captions, at the render's own speed.
+
+If they want particular sounds ("a soft click, not a pop", "a camera shutter on the numbers"), search HeyGen's library with `search_audio_sounds` and swap them in with `polish.py --sound`. Named sounds beat generic ones.
+
 ## 6. Hand it over
 
 Save to their Project:
@@ -136,7 +165,8 @@ Leave out the openings sentence when there are none. Log it in `Video Log.md` wi
 Start from the saved source: unpack `[date] [angle] source.tar.gz` into a work folder. Nothing gets re-rendered in HeyGen unless a new clip is needed, and never the whole video.
 
 - **On-screen words, colours, timing, an overlay, the cover:** edit `finish.json`, rebuild, re-render. Free, so no yes needed.
-- **The style:** `build.py WORK --style clean`, or set `style` in `finish.json`. Free.
+- **The style or the look:** `build.py WORK --style clean`, or set `style` or `look` in `finish.json`. Free.
+- **One graphic or custom moment:** change only that overlay and keep everything else as it is. Several changes go one at a time, each checked in a snapshot. Free.
 - **Faster or slower, louder or no sound effects:** `speed` and `sfx` in `finish.json`, or a sound swapped with `polish.py --sound`. Re-polish the rendered cut; no re-render needed unless the graphics changed. Free.
 - **A screen recording:** add or change a `screen` overlay, rebuild and re-render. Free.
 - **Music:** `music.py WORK --music "<url>"` for a new track, `--level` to change the volume, or `--off` to remove it. Then rebuild and re-render. Free.
