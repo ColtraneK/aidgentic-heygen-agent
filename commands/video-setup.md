@@ -112,7 +112,7 @@ Write **Business**, **Audience**, **Format**, **Brand kit**, **Proof points** an
 
 ### How the graphics move
 
-Every video gets an animated finish in their brand (the `hyperframes-finish` skill). It's free, and it needs a session that can run Node, Python and ffmpeg. Check with `node -v && python3 -V && ffmpeg -version`.
+Every video gets an animated finish in their brand (the `hyperframes-finish` skill). It's free, and it runs in Claude Code, not usually in Cowork. Check with `python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/preflight.py`.
 
 **It can run here.** Show them the three motion styles in their own brand before they choose. Copy `${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/` to a scratch folder (`TPL`) and run `sample.py` with the brand kit's colours, logo and fonts (pick them as that skill's step 1 says), and with words from their site: two short headline lines, one proof-point number and its label, and two things they offer.
 
@@ -135,14 +135,14 @@ Then one more, clickable: **Music under your videos?** None / Calm / Warm and up
 Then make the plain plate that graphics-only beats use: a still image in the brand's background colour.
 
 ```bash
-ffmpeg -f lavfi -i "color=c=<bg hex>:s=1080x1920" -frames:v 1 plate.png
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/plate.py "<bg hex>" plate.png
 ```
 
 Upload it to their HeyGen account: `create_asset_upload` (`filename: "graphics plate.png"`, `contentType: "image/png"`, the exact `sizeBytes`), PUT the file's bytes to the returned `upload_url`, then `complete_asset_upload`. It's free. If the upload fails, skip it and leave the plate line empty; graphics-only beats then fall back to b-roll.
 
 Write the **Finish** section with the style, the music mood and the plate's asset ID. Sound effects are on and the speed is 1 unless they say otherwise.
 
-**It can't run here.** Describe the three styles in one line each and ask the same question. Write the style and music mood, and leave the plate line empty. The finish runs later, in a session that can.
+**It can't run here** (preflight says HAND OFF, as it usually does in Cowork). Describe the three styles in one line each and ask the same question, then the music question. Still make and upload the graphics plate as below; it needs only Python. Write the style, music mood and plate into **Finish**. Then say it once, plainly: *"Everything else, the plans and the renders, happens right here. The animated finish runs in Claude Code, so after each render I'll leave you a handoff folder and the steps to finish it there."*
 
 Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice. If there's a look you love, send me screenshots any time and I'll make your videos look like that."* Don't ask for them now.
 

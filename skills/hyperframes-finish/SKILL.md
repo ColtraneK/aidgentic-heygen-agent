@@ -14,7 +14,56 @@ Read first:
 
 ## When it can run
 
-It needs a session that can download files and run Node, Python and ffmpeg (a cloud or Project session can). Check with `node -v && python3 -V && ffmpeg -version`. If any is missing, say once: *"The animated finish needs a Project session. Here's your HeyGen video as it is."* Then hand over the HeyGen link and stop.
+The finish needs Node, Python, ffmpeg and a headless Chrome, and it downloads the render, GSAP, fonts and the renderer. **Claude Code** can do all of that: the Code tab in the desktop app with a folder on their computer, Claude Code in a terminal, or Claude Code on the web. **Cowork** usually can't, even in a Project: its sandbox has no ffmpeg or blocks those downloads. Everything before the finish (setup, plans, renders, the content plan, the routine) works in Cowork.
+
+Check first, with the render's `video_url`:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/preflight.py --video "<video_url>"
+```
+
+**READY:** carry on here.
+
+**HAND OFF:** don't try to install things or work around the sandbox. Write the handoff note (below), hand over the plain HeyGen video so they have something now, and tell them how to finish it in Claude Code:
+
+> Your video's ready in HeyGen: [video_page_url]. The animated finish needs Claude Code, because it runs a video renderer this session can't. I've saved everything it needs in `Finish handoff/[date] [angle]/`. To finish it:
+>
+> 1. Open the **Code** tab in the Claude desktop app and choose a folder on your computer (any empty folder is fine).
+> 2. Put the `Finish handoff/[date] [angle]` folder in it.
+> 3. First time only: add the plugin there, by typing `/plugin marketplace add ColtraneK/aidgentic-heygen-agent` and then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`.
+> 4. Type: **finish the video in HANDOFF.md**
+>
+> The HeyGen links in it work for about a week.
+
+Give the steps once per person. After the first time, the line *"The finish is waiting in `Finish handoff/[date] [angle]/`: open it in Claude Code and say 'finish the video in HANDOFF.md'"* is enough.
+
+### The handoff note
+
+Write `Finish handoff/[date] [angle]/HANDOFF.md`, and copy `Video Profile.md` and the plan from `Video Plans/` beside it. Claude Code reads only what's in that folder, and it may not have HeyGen connected, so the note carries everything, in this shape:
+
+````markdown
+# Finish handoff: [title]
+
+Read this, `Video Profile.md` and `[plan].md`, then run the `hyperframes-finish` skill from the aidgentic-heygen-agent plugin, starting at step 2. Everything from step 1 is below; HeyGen isn't needed. Save the results in this folder.
+
+- **Render:** [video_url] (expires about [date + 7 days])
+- **Captions:** [subtitle_url]
+- **HeyGen page:** [video_page_url]
+- **Scenes:** avatar [1,4,8] · graphics-only [5] · the rest b-roll
+- **Brand:** bg [hex] · fg [hex] · accent [hex] · on accent [hex] · logo [url] · heading font [name] · mono font [name]
+- **Style:** [style] · **Look:** [none, or the CSS file copied here] · **Speed:** [1] · **Sound effects:** [on/off]
+- **Music:** [audio_url from search_audio_sounds, or none]
+- **Graphics, other openings and custom moments:** in the plan's beat sheet
+- **Screen recordings:** [files copied here, or none]
+
+If a link has expired: with HeyGen connected here, get fresh ones with `get_video` on [video_id]; otherwise ask for them in the original Project.
+````
+
+Pick the music track before handing off, while HeyGen is connected, so Claude Code needs nothing from HeyGen. Log the render in `Video Log.md` as usual, with the finish as `handed off to Claude Code`.
+
+### Running from a handoff note
+
+In Claude Code, when they say "finish the video in HANDOFF.md", take step 1's inputs from the note and the files beside it, and do steps 2 to 6 there. Save the results next to the note (or into their Project's `Videos/` if this session can reach it) and tell them where. If preflight fails here too, say which check failed. A missing ffmpeg is fixed by installing it (`brew install ffmpeg` on a Mac, `winget install ffmpeg` on Windows).
 
 Tell them what's happening and that it's free: *"Now I'm adding the motion graphics here. This part doesn't use credits and takes a few minutes."*
 
