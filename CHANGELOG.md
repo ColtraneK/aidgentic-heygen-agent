@@ -3,7 +3,7 @@
 ## 1.2.1 · October 2026
 
 - Where it runs: the README has a table of what works in Cowork and in Claude Code. Everything works in Cowork except the HyperFrames finish, which needs Claude Code (Node, Python, ffmpeg, a headless Chrome and downloads that Cowork's sandbox blocks).
-- Handoff: the finish checks the session first (`preflight.py`). Where it can't run, it hands over the plain HeyGen video and saves `Finish handoff/[date] [angle]/HANDOFF.md` with everything the finish needs, plus three steps: make a folder, open it in Claude Code, say "finish the video in HANDOFF.md". Claude Code then needs no HeyGen connection and no plugin install; it fetches the finish from this repo itself.
+- Handoff: the finish checks the session first (`preflight.py`). Where it can't run, it hands over the plain HeyGen video and saves `Finish handoff/[date] [angle]/HANDOFF.md` with everything the finish needs, plus three steps: make a folder, open it in Claude Code, say "finish the video in HANDOFF.md". Claude Code then needs no HeyGen connection and no plugin install; it fetches the finish from this repo itself, says what it downloads (about 400 MB, in user cache folders) and asks before installing ffmpeg or Node.
 - The graphics plate is made without ffmpeg (`plate.py`), so Cowork setups get graphics-only beats too.
 
 ## 1.2.0 · October 2026

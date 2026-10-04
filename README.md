@@ -96,7 +96,9 @@ About twelve minutes, and nothing in setup spends credits.
 2. Open that folder in the **Code** tab of the Claude desktop app.
 3. Type **finish the video in HANDOFF.md**.
 
-Claude Code does the rest. The first time, it fetches the finish tools from this repo and installs ffmpeg if your computer doesn't have it, so there's no plugin to install.
+Claude Code does the rest, and there's no plugin to install there.
+
+**What the finish puts on your computer.** The first time, Claude Code downloads the finish scripts from this repo (a few MB), the HyperFrames renderer and the GSAP animation library from npm (about 130 MB) and a headless Chrome that draws the frames (about 260 MB). They go into folders in your own user account, not system-wide, and you can delete them afterwards (`~/.npm/_npx` and `~/.cache/hyperframes`). It also needs Node and ffmpeg (a free video tool). If either is missing, Claude Code asks before installing it, and the Code tab shows you each command before it runs. The finish only downloads; it renders on your computer and uploads nothing.
 
 The finished video, its other openings and its cover are saved next to the note. The HeyGen links in the note work for about a week. No credits are spent in Claude Code; the finish is free.
 
