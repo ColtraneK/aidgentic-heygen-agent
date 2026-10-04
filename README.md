@@ -104,7 +104,7 @@ It works the same on a Mac and on Windows.
 
 **Removing it later.** The easiest way is to ask Claude Code to remove the finish tools. To do it yourself:
 - The downloads are folders, not programs: delete `.npm/_npx` and `.cache/hyperframes` in your home folder.
-- ffmpeg: `brew uninstall ffmpeg` on a Mac, `winget uninstall ffmpeg` on Windows. It doesn't show in the installed programs list.
+- ffmpeg: `brew uninstall ffmpeg` on a Mac, `winget uninstall ffmpeg` on Windows. It may not show in the installed programs list.
 - Node: on Windows, uninstall it from Settings, Apps. On a Mac, `brew uninstall node`, or the uninstall steps on nodejs.org if you used its installer.
 
 The finished video, its other openings and its cover are saved next to the note. The HeyGen links in the note work for about a week. No credits are spent in Claude Code; the finish is free.
