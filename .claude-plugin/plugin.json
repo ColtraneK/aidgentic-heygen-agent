@@ -1,6 +1,6 @@
 {
   "name": "aidgentic-heygen-agent",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "A video agent for HeyGen. It reads your website, plans videos from your own content, shows you the cost and asks before it spends a credit, renders with your avatar, voice and generated b-roll, and keeps a content plan running on a schedule.",
   "author": {
     "name": "Coltrane Kubo",

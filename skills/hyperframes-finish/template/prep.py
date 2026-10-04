@@ -8,11 +8,16 @@ renderer's headless Chrome can't reach CDNs, so everything must be local.
 
 Usage:
   python3 prep.py --video URL --subs URL --avatar 1,4,8 [--graphic 5] --out WORKDIR \
-      [--logo URL] [--heading-font "Inter"] [--mono-font "Geist Mono"]
+      [--logo URL] [--heading-font "Inter"] [--mono-font "Geist Mono"] [--avatar-fit auto|strip|portrait]
 
 --avatar lists the presenter's talking beats and --graphic the graphics-only
 beats (a plain plate in the render), by 1-based scene number. Everything else
 is b-roll.
+
+Avatar beats come in two shapes. A landscape look in a portrait render sits in
+a letterbox strip, and is cut out of it. A portrait look fills the frame, and
+its face is framed from the top of the frame down, not the middle. prep.py
+tells them apart per scene by looking for the letterbox; --avatar-fit forces one.
 
 Writes WORKDIR/project/assets/* and WORKDIR/scenes.json.
 """
@@ -85,6 +90,10 @@ def main():
     ap.add_argument("--heading-font", default="Inter")
     ap.add_argument("--mono-font", default="Geist Mono")
     ap.add_argument("--threshold", type=float, default=0.3)
+    ap.add_argument("--avatar-fit", choices=["auto", "strip", "portrait"], default="auto",
+                    help="strip: a landscape look letterboxed in the render; portrait: a look that fills the frame")
+    ap.add_argument("--face-y", type=float, default=0.135,
+                    help="portrait looks: where the card's top edge sits, as a share of the frame height")
     a = ap.parse_args()
 
     work = os.path.abspath(a.out)
@@ -103,10 +112,34 @@ def main():
     avatar = {int(x) for x in a.avatar.split(",") if x.strip()}
     graphic = {int(x) for x in a.graphic.split(",") if x.strip()}
 
-    # A landscape look in a portrait Studio render sits in a centred 16:9 strip.
-    strip_h = round(w * 9 / 16 / 2) * 2
-    strip_y = (h - strip_h) // 2
-    card_w = round(strip_h * 1.25 / 2) * 2
+    def letterbox(s, e):
+        """The picture's strip inside the frame, if the scene is letterboxed: (height, y) or None."""
+        mid = s + (e - s) / 2
+        det = subprocess.run(["ffmpeg", "-hide_banner", "-ss", f"{max(mid - 0.5, s):.3f}", "-i", render, "-t", "1",
+                              "-vf", "cropdetect=limit=24:round=2:reset=0", "-an", "-f", "null", "-"],
+                             text=True, capture_output=True).stderr
+        m = re.findall(r"crop=(\d+):(\d+):(\d+):(\d+)", det)
+        if not m:
+            return None
+        ch, cy = int(m[-1][1]), int(m[-1][3])
+        return (ch, cy) if ch < h * 0.8 else None
+
+    def avatar_vf(s, e):
+        strip = None if a.avatar_fit == "portrait" else letterbox(s, e)
+        if strip is None and a.avatar_fit == "strip":
+            # Forced strip but no letterbox found: assume a centred 16:9 strip.
+            sh = round(w * 9 / 16 / 2) * 2
+            strip = (sh, (h - sh) // 2)
+        if strip:
+            # A landscape look in a portrait render: cut the strip out, then the middle of it.
+            sh, sy = strip
+            cw = min(round(sh * 1.25 / 2) * 2, w)
+            return "landscape", f"crop={w}:{sh}:0:{sy},crop={cw}:{sh}:{(w - cw)//2}:0,scale=1080:864:flags=lanczos"
+        # A portrait look fills the frame. Its face sits in the upper part, so the
+        # 1080x864 card starts a little below the top: higher shows sky, the
+        # middle shows chest.
+        y = round(1920 * a.face_y / 2) * 2
+        return "portrait", f"scale=1080:1920:flags=lanczos,crop=1080:864:0:{y}"
     scenes = []
     for i in range(1, len(cuts)):
         s, e = cuts[i - 1], cuts[i]
@@ -116,13 +149,17 @@ def main():
             # Nothing from the render shows: the finish draws the whole frame.
             scenes.append({"n": i, "start": round(s, 3), "end": round(e, 3), "kind": kind, "clip": None})
             continue
+        fit = None
         if kind == "avatar":
-            vf = f"crop={w}:{strip_h}:0:{strip_y},crop={card_w}:{strip_h}:{(w - card_w)//2}:0,scale=1080:864:flags=lanczos"
+            fit, vf = avatar_vf(s, e)
         else:
             vf = "scale=1080:1920"
         run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{s}", "-i", render, "-t", f"{e - s:.3f}", "-an", "-vf", vf,
              "-r", "30", "-c:v", "libx264", "-crf", "16", "-preset", "fast", "-pix_fmt", "yuv420p", os.path.join(assets, clip)])
-        scenes.append({"n": i, "start": round(s, 3), "end": round(e, 3), "kind": kind, "clip": f"assets/{clip}"})
+        scene = {"n": i, "start": round(s, 3), "end": round(e, 3), "kind": kind, "clip": f"assets/{clip}"}
+        if fit:
+            scene["fit"] = fit
+        scenes.append(scene)
     run(["ffmpeg", "-y", "-loglevel", "error", "-i", render, "-vn", "-c:a", "aac", "-b:a", "192k",
          os.path.join(assets, "narration.m4a")])
 

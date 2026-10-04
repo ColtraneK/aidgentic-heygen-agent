@@ -107,6 +107,12 @@ def main():
     W, H = (1080, 864) if sc["kind"] == "avatar" else (1080, 1920)
     vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,"
           f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{0.3 if sc['kind'] == 'avatar' else 0.5}")
+    if sc["kind"] == "avatar":
+        sw, sh = map(int, run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                               "-of", "csv=p=0", raw]).stdout.strip().split(",")[:2])
+        if sh > sw:
+            # A portrait look: frame the card as prep.py does, from just below the top.
+            vf = "scale=1080:1920:flags=lanczos,crop=1080:864:0:260"
     if sc.get("clip"):
         run(["ffmpeg", "-y", "-loglevel", "error", "-stream_loop", "-1", "-i", raw, "-t", f"{new_len:.3f}", "-an",
              "-vf", vf, "-r", "30", "-c:v", "libx264", "-crf", "16", "-preset", "fast", "-pix_fmt", "yuv420p",
