@@ -69,6 +69,7 @@ Beat types:
 | `b-roll` | a generated clip that shows the line | their voice over it |
 | `you-in-scene` | a generated clip of them doing something, from their own look | their voice over it |
 | `end-card` | a generated clip that reveals their web address, or a final avatar beat | their voice |
+| `graphics` | only with the HyperFrames finish: the plain graphics plate, which the finish fills with a full-screen graphic (see `motion-graphics.md`) | their voice |
 
 ---
 
@@ -82,7 +83,7 @@ Settings: `aspectRatio` to match the video (`9:16` vertical, `16:9` landscape, `
 
 1. **Subject and action.** Who or what, doing what, in one clear motion. "A woman in her late twenties closes her laptop, leans back and lifts her coffee."
 2. **Setting.** Where, what's around, time of day.
-3. **Camera.** Name a real camera and lens and keep it still: "shot on ARRI Alexa Mini LF with a 50mm lens at T2, locked-off static camera, shallow depth of field".
+3. **Camera.** Name a real camera and lens and keep it still: "shot on ARRI Alexa Mini LF with a 50mm lens at T2, locked-off static camera, shallow depth of field". When the finish puts a graphic at the top of this beat, add "Frame the subject in the middle and lower part of the frame and keep the top third calm and uncluttered."
 4. **Light and grade.** "soft window light from the left, warm natural colour grade".
 5. **Brand colour, woven in.** Put their accent colour into the scene (a lit screen, a notebook, a beam of light) rather than over it.
 6. **The no-text line, every time:** "No logos, brand names, printed words or badges anywhere in frame."
@@ -132,6 +133,8 @@ One call, all beats in order.
 - b-roll, "you in a scene", and end-card beats:
   `{"type": "video", "source": {"type": "url", "url": <video_url from get_model_video>}, "script": "...", "voice_id": <voice id>, "playback": {"mode": "loop", "volume": 0.2}}`
   Keep the clip's own sound under the voice, at 0.15 to 0.3. An end card can go higher, 0.5 to 0.6.
+- Graphics-only beats (with the HyperFrames finish):
+  `{"type": "image", "source": {"type": "asset_id", "asset_id": <graphics plate from Video Profile.md>}, "script": "...", "voice_id": <voice id>}`
 - Top level: `aspectRatio` to match, `resolution: "1080p"`, `caption: {"style": "default"}`, and a `title` like "[Business] · [angle] · [date]".
 
 The narration sets each scene's length; clips loop under it. Avatar beats in Studio take a solid colour background only, so the look's own photo background is what shows. That's fine. The b-roll brings the variety.

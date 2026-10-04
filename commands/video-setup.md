@@ -2,7 +2,7 @@
 description: One-time setup. Connects HeyGen, reads your website, picks your presenter looks and voice, and drafts your first video ideas
 ---
 
-Set up the person's video agent, start to finish. Run once. About ten minutes, and most of it is reading and clicking.
+Set up the person's video agent, start to finish. Run once. About twelve minutes, and most of it is reading and clicking.
 
 This is a **guided build, not a form**. Talk to them like a producer setting up alongside them.
 
@@ -30,7 +30,7 @@ Something like:
 > | | | |
 > |---|---|---|
 > | **1** | Connect HeyGen and check your account | ~2 min |
-> | **2** | I read your website and pull in your brand | ~3 min |
+> | **2** | I read your website, pull in your brand and show you how your graphics could move | ~5 min |
 > | **3** | You pick your presenter looks and your voice | ~3 min |
 > | **4** | I draft your first video ideas | ~2 min |
 >
@@ -57,7 +57,7 @@ Check what exists and start at the first step that isn't done. Say where you're 
 | Step | Done when |
 |---|---|
 | 1. HeyGen | `Video Profile.md` exists with a **HeyGen account** line |
-| 2. Brand | `Video Profile.md` has **Business**, **Audience** and **Brand kit** filled in |
+| 2. Brand | `Video Profile.md` has **Business**, **Audience**, **Brand kit** and **Finish** filled in |
 | 3. Presenter | `Video Profile.md` has at least one look and a voice |
 | 4. Ideas | `Content Angles.md` exists |
 
@@ -90,7 +90,7 @@ Write `Video Profile.md` from the template at the bottom with the **HeyGen accou
 
 ---
 
-## Step 2 of 4: Your business and brand (about 3 minutes)
+## Step 2 of 4: Your business and brand (about 5 minutes)
 
 Ask one typed question, in plain prose, no options:
 
@@ -108,7 +108,43 @@ Then two clickable questions, with options drawn from what you read and room for
 1. **Who's watching?** The two or three audiences the site points at, plus "someone else".
 2. **Where will these videos live?** Vertical for social (9:16) / Landscape for a website, course or training (16:9) / Square (1:1).
 
-Write **Business**, **Audience**, **Format**, **Brand kit**, **Proof points** and **Call to action** into `Video Profile.md`. Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice."*
+Write **Business**, **Audience**, **Format**, **Brand kit**, **Proof points** and **Call to action** into `Video Profile.md`.
+
+### How the graphics move
+
+Every video gets an animated finish in their brand (the `hyperframes-finish` skill). It's free, and it needs a session that can run Node, Python and ffmpeg. Check with `node -v && python3 -V && ffmpeg -version`.
+
+**It can run here.** Show them the three motion styles in their own brand before they choose. Copy `${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/` to a scratch folder and run `sample.py` with the brand kit's colours, logo and fonts (pick them as that skill's step 1 says), and with words from their site: two short headline lines, one proof-point number and its label, and two things they offer.
+
+```bash
+python3 sample.py STYLES --name "<brand>" --bg "<bg>" --fg "<fg>" --accent "<accent>" --on-accent "<on accent>" \
+  --logo "<logo url>" --heading-font "<font>" --headline "<line one>|<line two>" \
+  --number "<number>" --label "<label>" --pills "<offer one>|<offer two>"
+```
+
+It takes a minute or two. Save `STYLES/styles.jpg` to their Project as `Video Styles/Motion styles.jpg` and show it. Then one clickable question:
+
+> Here's your brand in the three motion styles, left to right. Which feels like you?
+>
+> - **Bold**: words pop and bounce, a flash at every cut. Loud and fast, made for social.
+> - **Clean**: words rise and settle, no flash. Calm and product-like.
+> - **Editorial**: slower, lighter type, underlines. Considered and premium.
+
+Then one more, clickable: **Music under your videos?** None / Calm / Warm and upbeat / Energetic / Cinematic. Music comes from HeyGen's library and is free.
+
+Then make the plain plate that graphics-only beats use: a still image in the brand's background colour.
+
+```bash
+ffmpeg -f lavfi -i "color=c=<bg hex>:s=1080x1920" -frames:v 1 plate.png
+```
+
+Upload it to their HeyGen account: `create_asset_upload` (`filename: "graphics plate.png"`, `contentType: "image/png"`, the exact `sizeBytes`), PUT the file's bytes to the returned `upload_url`, then `complete_asset_upload`. It's free. If the upload fails, skip it and leave the plate line empty; graphics-only beats then fall back to b-roll.
+
+Write the **Finish** section with the style, the music mood and the plate's asset ID.
+
+**It can't run here.** Describe the three styles in one line each and ask the same question. Write the style and music mood, and leave the plate line empty. The finish runs later, in a session that can.
+
+Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice."*
 
 ---
 
@@ -153,7 +189,7 @@ Then close.
 
 Short:
 
-1. **What they have now.** Two or three lines in their own nouns: *"Your profile knows Aidgentic, your three looks, your voice clone, and your lime and black brand. Your idea bank has eight angles from your case studies and principles."*
+1. **What they have now.** Two or three lines in their own nouns: *"Your profile knows Aidgentic, your three looks, your voice clone, and your lime and black brand, animated in the Clean style. Your idea bank has eight angles from your case studies and principles."*
 2. **The three things to say:** "plan a video", "make my content plan", "what's running".
 3. **One next step:** the angle you'd make first and why, offered as a yes or no. *"I'd start with angle 2, the four hours to thirty minutes story. It has a clear before and after. Want me to plan it? I'll show you the plan and the cost before anything renders."*
 
@@ -200,6 +236,9 @@ Every video plan reads this first. Where a scheduled prompt disagrees with this 
 
 ## Finish
 HyperFrames finish by default (the `hyperframes-finish` skill), where the session can run it.
+**Motion style:** [Bold / Clean / Editorial]
+**Music:** [none / a mood, e.g. "warm and upbeat"]
+**Graphics plate:** `[asset_id]` (a plain [bg hex] image for graphics-only beats)
 
 ## Voice rules for scripts
 First person. Plain speech, contractions, short sentences. Numbers as they'd say them. No claims the sources don't make.
@@ -231,6 +270,7 @@ Claude reads this at the start of every session in this Project.
 | "make a video from [link]" | same, from a page or document I give you |
 | "quick video about [topic]" | one avatar take, fastest and cheapest |
 | "fix beat [n]" | regenerate one part and reassemble |
+| "change the style" / "add music" / "another hook" | change the animated finish, free |
 | "more ideas" | add angles to my idea bank |
 | "make my content plan" | what gets made, how often, from what, and what it costs |
 | "put it on a schedule" | a routine that plans the next video on its own |

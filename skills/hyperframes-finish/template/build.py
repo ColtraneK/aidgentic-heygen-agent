@@ -4,17 +4,50 @@
 Reads WORK/scenes.json (from prep.py) and WORK/finish.json (brand + overlays,
 written per video), and writes WORK/project/index.html plus the project files.
 
-Usage: python3 build.py WORKDIR
+Usage:
+  python3 build.py WORKDIR                 the main cut
+  python3 build.py WORKDIR --hook B        the same cut with opening "B" from finish.json's hooks
+  python3 build.py WORKDIR --style clean   override finish.json's style (bold, clean, editorial)
+  python3 build.py WORKDIR --cover         also write WORK/cover/, a one-frame cover for the post
+
+It also writes WORK/preview-times.txt: one moment per scene, for the preview sheet.
 """
-import html, json, os, sys
+import argparse, html, json, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-work = os.path.abspath(sys.argv[1])
+ap = argparse.ArgumentParser()
+ap.add_argument("work")
+ap.add_argument("--hook")
+ap.add_argument("--style")
+ap.add_argument("--cover", action="store_true")
+args = ap.parse_args()
+work = os.path.abspath(args.work)
+proj = os.path.join(work, "project")
 scn = json.load(open(os.path.join(work, "scenes.json")))
 fin = json.load(open(os.path.join(work, "finish.json")))
 brand = fin["brand"]
 TOTAL = scn["duration"]
 scenes = scn["scenes"]
+
+# Three motion styles. Bold pops and flashes; Clean drops the bounce, spin and
+# flash; Editorial is calmer still, with underlines instead of highlight blocks.
+STYLE = (args.style or fin.get("style", "bold")).lower()
+STY = {"bold": {"flash": 0.45, "soften": 1.0, "ease": None, "slow": 1.0},
+       "clean": {"flash": 0.0, "soften": 0.3, "ease": "power3.out", "slow": 1.0},
+       "editorial": {"flash": 0.0, "soften": 0.15, "ease": "expo.out", "slow": 1.3}}.get(STYLE)
+if not STY:
+    sys.exit(f"unknown style {STYLE!r}: use bold, clean or editorial")
+
+overlays = fin["overlays"]
+if args.hook:
+    hook = next((h for h in fin.get("hooks", []) if h["name"] == args.hook), None)
+    if not hook:
+        sys.exit(f"no hook named {args.hook!r} in finish.json")
+    # The variant's overlays replace everything that starts before it ends.
+    until = hook.get("until", scenes[0]["end"])
+    overlays = [o for o in overlays if o["start"] >= until - 1e-3] + hook["overlays"]
+    if "captionScenes" in hook:
+        fin["captionScenes"] = hook["captionScenes"]
 
 E, T = [], []
 r3 = lambda x: round(float(x), 3)
@@ -25,7 +58,8 @@ def ts(s):
     return int(h) * 3600 + int(m) * 60 + int(sec) + int(ms) / 1000
 
 subs = []
-for blk in open(os.path.join(work, scn["subs"])).read().strip().split("\n\n"):
+subs_path = os.path.join(work, scn.get("subs") or "subs.srt")
+for blk in (open(subs_path).read().strip().split("\n\n") if os.path.exists(subs_path) else []):
     lines = blk.strip().split("\n")
     if len(lines) < 3:
         continue
@@ -48,12 +82,36 @@ def words(text, cls, wid):
     parts = text.split()
     return "".join(f'<span class="w {cls}" id="{wid}{k}">{esc(p)}</span>' for k, p in enumerate(parts)), len(parts)
 
+def tame(props):
+    """Soften an entrance for the calmer styles: less scale, no spin."""
+    if STYLE == "bold":
+        return props
+    props = re.sub(r"scale:([0-9.]+)", lambda m: f"scale:{r3(1 + (float(m.group(1)) - 1) * STY['soften'])}", props)
+    return re.sub(r"rotation:-?[0-9.]+", "rotation:0", props)
+
 def rise(wid, n, t0, step=0.07):
+    frm = "y:50, opacity:0, rotation:4" if STYLE == "bold" else "y:36, opacity:0"
+    ease = STY["ease"] or "back.out(2)"
     for k in range(n):
-        T.append(f'tl.fromTo("#{wid}{k}", {{y:50, opacity:0, rotation:4}}, {{y:0, opacity:1, rotation:0, duration:0.45, ease:"back.out(2)"}}, {r3(t0 + k * step)});')
+        T.append(f'tl.fromTo("#{wid}{k}", {{{frm}}}, {{y:0, opacity:1, rotation:0, duration:{r3(0.45 * STY["slow"])}, ease:"{ease}"}}, {r3(t0 + k * step)});')
 
 def pop(sel, at, frm="scale:0.5, y:40, opacity:0", to="scale:1, y:0, opacity:1", dur=0.5, ease="back.out(2.4)"):
+    if STYLE != "bold":
+        frm, dur = tame(frm), r3(dur * STY["slow"])
+        if ease.startswith("back") or ease.startswith("power4"):
+            ease = STY["ease"]
     T.append(f'tl.fromTo("{sel}", {{{frm}}}, {{{to}, duration:{dur}, ease:"{ease}"}}, {r3(at)});')
+
+def emphasize(sel, at):
+    """One word on the accent colour: a block in Bold, coloured text in Clean, an underline in Editorial."""
+    on_acc, acc = brand.get("onAccent", brand["bg"]), brand["accent"]
+    if STYLE == "editorial":
+        T.append(f'tl.set("{sel}", {{backgroundImage:"linear-gradient({acc},{acc})", backgroundRepeat:"no-repeat", backgroundPosition:"0 96%", backgroundSize:"0% 0.08em"}}, 0);')
+        T.append(f'tl.to("{sel}", {{backgroundSize:"100% 0.08em", duration:0.45, ease:"expo.out"}}, {r3(at)});')
+    elif STYLE == "clean" and acc.lower() != brand["fg"].lower():
+        T.append(f'tl.to("{sel}", {{color:"{acc}", duration:0.2}}, {r3(at)});')
+    else:
+        T.append(f'tl.to("{sel}", {{color:"{on_acc}", backgroundColor:"{acc}", duration:0.15}}, {r3(at)});')
 
 def block(eid, start, end, inner, track=5):
     E.append(f'<div id="{eid}" class="clip ov" data-start="{r3(start)}" data-duration="{r3(end - start)}" data-track-index="{track}">{inner}</div>')
@@ -68,22 +126,28 @@ for s in scenes:
         pop(f"#v{i}", st, "scale:0.86, y:60, opacity:0", "scale:1, y:0, opacity:1", 0.55, "expo.out")
         T.append(f'tl.to("#v{i}", {{scale:1.04, duration:{r3(max(d - 0.55, 0.1))}, ease:"none"}}, {r3(st + 0.55)});')
         T.append(f'tl.fromTo("#glow{i}", {{x:-260, opacity:0}}, {{x:260, opacity:0.55, duration:{d}, ease:"sine.inOut"}}, {st});')
+    elif s["kind"] == "graphic":
+        # A graphics-only beat: the brand background, a drifting glow, and the overlay fills the frame.
+        E.append(f'<div id="bg{i}" class="clip avbg" data-start="{st}" data-duration="{d}" data-track-index="1"></div>')
+        E.append(f'<div id="glow{i}" class="clip glow gglow" data-start="{st}" data-duration="{d}" data-track-index="2"></div>')
+        T.append(f'tl.fromTo("#bg{i}", {{backgroundPosition:"0px 0px"}}, {{backgroundPosition:"0px -108px", duration:{d}, ease:"none"}}, {st});')
+        T.append(f'tl.fromTo("#glow{i}", {{y:240, opacity:0.2}}, {{y:-240, opacity:0.6, duration:{d}, ease:"sine.inOut"}}, {st});')
     else:
         E.append(f'<video id="v{i}" class="clip brvid" src="{s["clip"]}" muted playsinline data-start="{st}" data-duration="{d}" data-track-index="3"></video>')
         E.append(f'<div id="sh{i}" class="clip shade" data-start="{st}" data-duration="{d}" data-track-index="4"></div>')
         T.append(f'tl.fromTo("#v{i}", {{scale:1.12}}, {{scale:1.0, duration:{d}, ease:"power1.out"}}, {st});')
-    if i > 1:
+    if i > 1 and STY["flash"]:
         E.append(f'<div id="fl{i}" class="clip flash" data-start="{r3(st - 0.08)}" data-duration="0.45" data-track-index="10"></div>')
-        T.append(f'tl.fromTo("#fl{i}", {{opacity:0.45}}, {{opacity:0, duration:0.37, ease:"power2.out"}}, {st});')
+        T.append(f'tl.fromTo("#fl{i}", {{opacity:{STY["flash"]}}}, {{opacity:0, duration:0.37, ease:"power2.out"}}, {st});')
 
 # ---------- persistent chrome ----------
-outro_start = next((o["start"] for o in fin["overlays"] if o["type"] == "outro"), TOTAL)
+outro_start = next((o["start"] for o in overlays if o["type"] == "outro"), TOTAL)
 block("chrome", 0, outro_start, f'<div class="brandtag">{logo_html()}<span>{esc(brand.get("name", "").upper())}</span></div><div class="prog"><div id="progfill"></div></div>', track=9)
 T.append(f'tl.fromTo("#progfill", {{scaleX:0}}, {{scaleX:1, duration:{TOTAL}, ease:"none"}}, 0);')
 pop("#chrome .brandtag", 0.1, "y:-40, opacity:0", "y:0, opacity:1", 0.6, "expo.out")
 
 # ---------- overlays ----------
-for n, o in enumerate(fin["overlays"]):
+for n, o in enumerate(overlays):
     oid, t, st, en = f"o{n}", o["type"], o["start"], o["end"]
     if t == "headline":
         rows = []
@@ -99,8 +163,7 @@ for n, o in enumerate(fin["overlays"]):
         block(oid, st, en, f'<div class="head {o.get("pos", "top")}">{"<br>".join(rows)}</div>')
         em = o.get("emphasize")
         if em:
-            on_acc, acc = brand.get("onAccent", brand["bg"]), brand["accent"]
-            T.append(f'tl.to("#{oid}l{em["line"]}_{em["word"]}", {{color:"{on_acc}", backgroundColor:"{acc}", duration:0.15}}, {r3(em["at"])});')
+            emphasize(f'#{oid}l{em["line"]}_{em["word"]}', em["at"])
     elif t == "reveal":
         block(oid, st, en, f'<div class="head top"><div class="kicker" id="{oid}k">{esc(o["kicker"])}</div><div class="reveal">{logo_html("logo big-logo")}<span class="rtitle" id="{oid}t">{esc(o["title"])}</span></div></div>')
         pop(f"#{oid}k", o["kickerAt"], "x:-80, opacity:0", "x:0, opacity:1", 0.6, "expo.out")
@@ -207,7 +270,9 @@ face = "".join(
 vars_css = (f':root {{ --bg: {brand["bg"]}; --fg: {brand["fg"]}; --accent: {brand["accent"]}; --on-accent: {brand.get("onAccent", brand["bg"])};'
             f' --heading: "{fonts["heading"]["family"]}", ui-sans-serif, system-ui, sans-serif; --mono: "{fonts["mono"]["family"]}", ui-monospace, monospace; }}\n')
 css = face + vars_css + open(os.path.join(HERE, "style.css")).read()
-page = f'''<!doctype html>
+
+def page(duration, body, tweens):
+    return f'''<!doctype html>
 <html lang="en" data-resolution="portrait">
 <head>
 <meta charset="UTF-8" />
@@ -218,23 +283,104 @@ page = f'''<!doctype html>
 </style>
 </head>
 <body>
-<div id="root" data-composition-id="main" data-start="0" data-duration="{TOTAL}" data-width="1080" data-height="1920">
-<audio id="vo" src="assets/narration.m4a" data-start="0" data-duration="{TOTAL}" data-track-index="0" data-volume="1"></audio>
-{chr(10).join(E)}
-<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>
+<div id="root" class="style-{STYLE}{' cover' if duration == 1 else ''}" data-composition-id="main" data-start="0" data-duration="{duration}" data-width="1080" data-height="1920">
+{body}
 </div>
 <script>
 window.__timelines = window.__timelines || {{}};
 const tl = gsap.timeline({{ paused: true }});
-{chr(10).join(T)}
+{tweens}
 window.__timelines["main"] = tl;
 tl.seek(0);
 </script>
 </body>
 </html>
 '''
-proj = os.path.join(work, "project")
-open(os.path.join(proj, "index.html"), "w").write(page)
-json.dump({"paths": {"assets": "assets"}, "media": {"autoProxy": True}}, open(os.path.join(proj, "hyperframes.json"), "w"), indent=2)
-json.dump({"id": "finish", "name": "finish"}, open(os.path.join(proj, "meta.json"), "w"), indent=2)
-print(f"wrote {proj}/index.html: {len(E)} elements, {len(T)} tweens, {ci} captions")
+
+def write_project(folder, html_text, name):
+    open(os.path.join(folder, "index.html"), "w").write(html_text)
+    json.dump({"paths": {"assets": "assets"}, "media": {"autoProxy": True}}, open(os.path.join(folder, "hyperframes.json"), "w"), indent=2)
+    json.dump({"id": name, "name": name}, open(os.path.join(folder, "meta.json"), "w"), indent=2)
+
+audio = []
+if os.path.exists(os.path.join(proj, "assets", "narration.m4a")):
+    audio.append(f'<audio id="vo" src="assets/narration.m4a" data-start="0" data-duration="{TOTAL}" data-track-index="0" data-volume="1"></audio>')
+if os.path.exists(os.path.join(proj, "assets", "music.m4a")):
+    # Mixed and ducked under the voice by music.py.
+    audio.append(f'<audio id="music" src="assets/music.m4a" data-start="0" data-duration="{TOTAL}" data-track-index="12" data-volume="1"></audio>')
+body = "\n".join(audio + E + [f'<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>'])
+write_project(proj, page(TOTAL, body, "\n".join(T)), "finish")
+print(f"wrote {proj}/index.html: style {STYLE}{', hook ' + args.hook if args.hook else ''}, {len(E)} elements, {len(T)} tweens, {ci} captions")
+
+# ---------- preview times: each overlay once it has fully landed, and every scene ----------
+def landed(o):
+    hits = []
+    def walk(node):
+        if isinstance(node, dict):
+            for k, v in node.items():
+                if isinstance(v, (int, float)) and (k == "at" or (k.endswith("At") and k != "fadeAt")):
+                    settle = 1.5 + 0.25 * sum(c.isdigit() for c in o.get("value", "")) if o["type"] == "counter" and k == "at" else 0.8
+                    hits.append(v + settle)
+                else:
+                    walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+    walk(o)
+    t = max(hits) if hits else (o["start"] + o["end"]) / 2
+    return min(max(t, o["start"] + 0.4), o["end"] - 0.15)
+moments = [landed(o) for o in overlays]
+moments += [(s["start"] + s["end"]) / 2 for s in scenes if not any(s["start"] - 1e-3 <= o["start"] < s["end"] for o in overlays)]
+picked = []
+for t in sorted(moments):
+    if not picked or t - picked[-1] > 0.3:
+        picked.append(r3(t))
+times = ",".join(str(t) for t in picked)
+open(os.path.join(work, "preview-times.txt"), "w").write(times + "\n")
+print(f"preview times ({len(picked)}): {times}")
+
+# ---------- cover: one still frame for the post ----------
+if args.cover:
+    cv = fin.get("cover", {})
+    first = next((o for o in fin["overlays"] if o["type"] == "headline"), None)
+    lines = cv.get("lines") or ([l["text"] for l in first["lines"]] if first else [brand.get("name", "")])
+    em = cv.get("emphasize", first.get("emphasize") if first else None)
+    sc = next((x for x in scenes if x["n"] == cv.get("scene")), None) or next((x for x in scenes if x["kind"] == "avatar"), scenes[0])
+    cdir = os.path.join(work, "cover")
+    shutil.rmtree(cdir, ignore_errors=True)
+    shutil.copytree(os.path.join(proj, "assets", "fonts"), os.path.join(cdir, "assets", "fonts"))
+    shutil.copy(os.path.join(proj, "assets", "gsap.min.js"), os.path.join(cdir, "assets"))
+    if scn.get("logo"):
+        shutil.copy(os.path.join(proj, scn["logo"]), os.path.join(cdir, scn["logo"]))
+    parts = ['<div class="clip avbg" data-start="0" data-duration="1" data-track-index="1"></div>']
+    if sc.get("clip"):
+        still = os.path.join(cdir, "assets", "still.jpg")
+        mid = (sc["end"] - sc["start"]) / 2
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f"{mid:.2f}", "-i", os.path.join(proj, sc["clip"]),
+                        "-frames:v", "1", "-q:v", "2", still], check=True)
+        if sc["kind"] == "avatar":
+            parts.append('<div class="clip glow" data-start="0" data-duration="1" data-track-index="2"></div>')
+            parts.append('<img class="clip avvid" src="assets/still.jpg" alt="" data-start="0" data-duration="1" data-track-index="3" />')
+        else:
+            parts.append('<img class="clip brvid" src="assets/still.jpg" alt="" data-start="0" data-duration="1" data-track-index="3" />')
+            parts.append('<div class="clip shade" data-start="0" data-duration="1" data-track-index="4"></div>')
+    on_acc, acc = brand.get("onAccent", brand["bg"]), brand["accent"]
+    rows = []
+    for li, text in enumerate(lines):
+        ws = text.split()
+        spans = []
+        for k, wd in enumerate(ws):
+            style = ""
+            if em and em["line"] == li and em["word"] == k:
+                style = (f' style="background-image:linear-gradient({acc},{acc});background-repeat:no-repeat;background-position:0 96%;background-size:100% 0.08em"' if STYLE == "editorial"
+                         else f' style="color:{acc}"' if STYLE == "clean" and acc.lower() != brand["fg"].lower()
+                         else f' style="color:{on_acc};background-color:{acc}"')
+            spans.append(f'<span class="w {cv.get("size", "big")}"{style}>{esc(wd)}</span>')
+        rows.append("".join(spans))
+    outro = next((o for o in fin["overlays"] if o["type"] == "outro"), None)
+    foot = cv.get("footer", " ".join(outro["lines"]) if outro else "")
+    foot_html = f'<div class="cover-foot">{esc(foot)}</div>' if foot else ""
+    parts.append(f'<div class="clip ov" data-start="0" data-duration="1" data-track-index="5"><div class="brandtag">{logo_html()}<span>{esc(brand.get("name", "").upper())}</span></div>'
+                 f'<div class="head {cv.get("pos", "top")} cover-head">{"<br>".join(rows)}</div>{foot_html}</div>')
+    write_project(cdir, page(1, "\n".join(parts), ""), "cover")
+    print(f"wrote {cdir}/index.html: snapshot it with --at 0.5")

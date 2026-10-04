@@ -9,7 +9,8 @@ Two kinds of fix:
 
     python3 swap.py WORK --scene 3 --video URL_OR_FILE
 
-  A new avatar line (--line): the new clip brings its own voice. Its picture and
+  A new line (--line): the new clip brings its own voice (for a graphics-only
+  scene, an audio file is enough). Its picture and
   sound replace scene N, the narration is re-spliced, and everything after the
   scene moves by the difference in length: later scenes, finish.json timings
   and the captions. Pass the new clip's captions with --subs to caption it.
@@ -19,7 +20,7 @@ Two kinds of fix:
 The previous files are kept in WORK/before-swap-N/. Rebuild with build.py and
 re-render after a swap; for --line, re-time the overlays inside scene N.
 """
-import argparse, json, os, re, shutil, subprocess, urllib.request
+import argparse, json, os, re, shutil, subprocess, sys, urllib.request
 
 def run(cmd):
     return subprocess.run(cmd, check=True, text=True, capture_output=True)
@@ -85,11 +86,13 @@ def main():
     if not sc:
         raise SystemExit(f"no scene {a.scene}; scenes.json has 1 to {len(scn['scenes'])}")
     old_len = sc["end"] - sc["start"]
+    if sc["kind"] == "graphic" and not a.line:
+        raise SystemExit(f"scene {a.scene} is graphics only, so it has no clip to swap. Edit its overlay in finish.json.")
 
     keep = os.path.join(work, f"before-swap-{a.scene}")
     os.makedirs(keep, exist_ok=True)
-    for f in ["scenes.json", "finish.json", scn["subs"], os.path.join("project", sc["clip"]),
-              os.path.join("project", "assets", "narration.m4a")]:
+    for f in ["scenes.json", "finish.json", scn["subs"], os.path.join("project", sc.get("clip") or "-"),
+              os.path.join("project", "assets", "narration.m4a"), os.path.join("project", "assets", "music.m4a")]:
         p = os.path.join(work, f)
         if os.path.exists(p):
             shutil.copy(p, os.path.join(keep, os.path.basename(f)))
@@ -98,14 +101,16 @@ def main():
     get(a.video, raw)
     new_len = probe_dur(raw) if a.line else old_len
 
+    # A graphics-only scene takes just the new voice; its picture is drawn by the finish.
     # Avatar scenes sit in a 1080x864 card; anything else fills the 1080x1920 frame.
     # Crop to cover, keeping the top of the frame where faces usually are.
     W, H = (1080, 864) if sc["kind"] == "avatar" else (1080, 1920)
     vf = (f"scale={W}:{H}:force_original_aspect_ratio=increase:flags=lanczos,"
           f"crop={W}:{H}:(iw-{W})/2:(ih-{H})*{0.3 if sc['kind'] == 'avatar' else 0.5}")
-    run(["ffmpeg", "-y", "-loglevel", "error", "-stream_loop", "-1", "-i", raw, "-t", f"{new_len:.3f}", "-an",
-         "-vf", vf, "-r", "30", "-c:v", "libx264", "-crf", "16", "-preset", "fast", "-pix_fmt", "yuv420p",
-         os.path.join(proj, sc["clip"])])
+    if sc.get("clip"):
+        run(["ffmpeg", "-y", "-loglevel", "error", "-stream_loop", "-1", "-i", raw, "-t", f"{new_len:.3f}", "-an",
+             "-vf", vf, "-r", "30", "-c:v", "libx264", "-crf", "16", "-preset", "fast", "-pix_fmt", "yuv420p",
+             os.path.join(proj, sc["clip"])])
 
     if a.line:
         delta = round(new_len - old_len, 3)
@@ -150,6 +155,12 @@ def main():
         json.dump(scn, open(os.path.join(work, "scenes.json"), "w"), indent=2)
         for p in parts + [lst]:
             os.remove(p)
+        if os.path.exists(os.path.join(proj, "assets", "music-src.m4a")):
+            # The video got longer or shorter, so re-fit the music bed to it.
+            sys.dont_write_bytecode = True
+            sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+            import music
+            music.mix(work)
         print(f"scene {a.scene}: {old_len:.2f}s -> {new_len:.2f}s; later scenes moved {delta:+.2f}s; "
               f"total {scn['duration']:.2f}s. Re-time the overlays inside scene {a.scene} in finish.json.")
     else:

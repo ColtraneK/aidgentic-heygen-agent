@@ -1,5 +1,6 @@
 {
   "brand": {"name": "Your Brand", "bg": "#101418", "fg": "#ffffff", "accent": "#3b82f6", "onAccent": "#ffffff"},
+  "style": "bold",
   "captionScenes": [2, 3, 4],
   "overlays": [
     {"type": "headline", "start": 0, "end": 3.8, "size": "big",
@@ -25,5 +26,15 @@
     {"type": "headline", "start": 29.1, "end": 31.0, "size": "big",
      "lines": [{"text": "Call to", "at": 29.2, "step": 0.16}, {"text": "action.", "at": 29.9, "step": 0.2, "size": "huge"}]},
     {"type": "outro", "start": 31.1, "end": 34.0, "lines": ["Your call", "to action."], "logoAt": 31.2, "linesAt": 31.5}
-  ]
+  ],
+  "hooks": [
+    {"name": "B", "until": 3.8, "overlays": [
+      {"type": "headline", "start": 0, "end": 3.8, "size": "big",
+       "lines": [{"text": "1,250", "at": 0.2, "size": "huge"}, {"text": "customers so far.", "at": 0.9, "step": 0.2}]}]},
+    {"name": "C", "until": 3.8, "overlays": [
+      {"type": "headline", "start": 0, "end": 3.8, "size": "slam",
+       "lines": [{"text": "A different", "at": 0.2, "step": 0.3}, {"text": "first line.", "at": 1.2, "step": 0.3}],
+       "emphasize": {"line": 1, "word": 0, "at": 2.0}}]}
+  ],
+  "cover": {"lines": ["A hook line", "from the script."], "footer": "Your call to action."}
 }
