@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.0 · October 2026
+
+The polish from the first hand-finished videos, now built into every finish.
+
+- Screen recordings: a `screen` graphic puts a real recording (a click path, a setting, the product) in a framed card that tilts in, zooms to each click with a ring, and boxes the thing to look at. `plan-video` asks for the recording with the plan.
+- Sound effects: `build.py` places a whoosh, pop, click or chime on every cut and graphic, tuned to the style, and the new `polish.py` mixes them under the voice. Four sounds are made locally; HeyGen library sounds can replace them with `--sound`.
+- Speed: a `speed` setting (1.05 to 1.15 for a slow-reading voice) speeds up picture and voice together without changing pitch.
+- Portrait looks: avatar cards from a look that fills the frame are now framed on the face. Before, they were cut from the middle of the frame and showed the chest. `prep.py` detects the letterbox per scene; `--face-y` and `--avatar-fit` adjust it, and `swap.py` frames re-recorded lines the same way.
+- Custom moments: every video gets one or two moments designed from scratch for its own lines, built as a `raw` overlay (hand-written HTML clips and GSAP tweens), shown in the preview sheet with everything else. No new questions.
+- Safe zones: the layout keeps words, numbers and logos out of the areas Reels, TikTok and Shorts cover (top 160px, bottom 380px, right 120px). Captions, bottom headlines and the end card moved up to match. `build.py --guides` tints those areas for checking the preview.
+- Looks from references: send screenshots of a look you love and the finish makes a CSS look from them, laid over the base style, previewed with `sample.py --look`. Never asked for; setup mentions it once.
+- Parts for an editor: `polish.py --stems` writes the picture without sound, the voice, the music, the sound effects alone and the captions, on request.
+
 ## 1.1.0 · October 2026
 
 - `hyperframes-finish`: a new skill that turns a finished Studio render into a branded motion-graphics cut (kinetic headlines, counters, UI mock-ups, checklists, captions, logo outro, no letterboxing). It reads colours, logo and fonts from the brand kit, and it's built and rendered locally with HyperFrames, so it spends no credits. `plan-video` runs it after the render when the profile's Finish says HyperFrames.

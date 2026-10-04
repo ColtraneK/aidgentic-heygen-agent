@@ -1,6 +1,8 @@
 {
   "brand": {"name": "Your Brand", "bg": "#101418", "fg": "#ffffff", "accent": "#3b82f6", "onAccent": "#ffffff"},
   "style": "bold",
+  "speed": 1,
+  "sfx": "auto",
   "captionScenes": [2, 3, 4],
   "overlays": [
     {"type": "headline", "start": 0, "end": 3.8, "size": "big",

@@ -22,15 +22,28 @@ Read each beat's line and pick at most one graphic for it. A beat with no graphi
 | lists proof or steps | `checklist` | 2 to 4 rows that tick, then a result badge |
 | is the promise or the turn | `headline` (`slam`) | 2 to 4 big words, one on the accent |
 | is the call to action | `headline` then `outro` | the call to action, then the logo and the same words |
+| walks through a click path, a setting or the product itself | `screen` | a real recording of it, tilting in, zooming to each click, boxing the thing to look at |
 
 Keep words short. A headline line is at most about 18 characters at `big` and 12 at `slam`. Captions carry the rest, and the narration carries the detail.
 
 ## Where graphics can go
 
-- **Avatar beats:** only graphics that sit at the top, above the presenter's card: `headline`, `reveal`, `chips`, `check`, and `rail` when it's short. Never a `counter`, `search`, `checklist` or a bottom `headline`: those cover the face.
+- **Avatar beats:** only graphics that sit at the top, above the presenter's card: `headline`, `reveal`, `chips`, `check`, `rail` when it's short, and a `screen` cut down to a short wide strip. Never a `counter`, `search`, `checklist` or a bottom `headline`: those cover the face.
 - **B-roll beats:** anything. The prompt for a beat with a top graphic asks for a calm top third (see *B-roll that leaves room*).
 - **Graphics-only beats:** anything, and a `headline` can sit in the middle (`"pos": "center"`).
 - At most two graphics on one beat, and never two that both sit at the top.
+
+## Custom moments
+
+Each video also gets one or two moments designed from scratch for its own lines (a `raw` overlay; the `hyperframes-finish` skill says how). The types above are the floor, not the ceiling. In the beat sheet, a custom moment's *Graphic* is `custom:` and the idea in a few words: "custom: a toggle flips to OFF".
+
+## Screen recordings
+
+Nothing proves "here's where the setting is" like the setting itself. When a line points at something on a screen, plan a `screen` graphic and ask for the recording when you show the plan: *"Beat 3 shows the real click path. Record your screen going Settings, then Data controls (a phone or desktop recording is fine) and drop it here."* No recording by render time: use a `search` or `chips` mock-up instead and say so.
+
+- Best on a graphics-only or b-roll beat, where it can sit big in the middle. A top `headline` or `chips` can sit above it.
+- Mark the moment of the click (`clicks`) and the thing to look at (`highlights`). One or two of each per recording.
+- Never show anything private in a recording: their email, a client's name, an API key. Crop or blur it first, and check the preview frame.
 
 ## Graphics-only beats
 
@@ -56,6 +69,12 @@ The style is set once in `Video Profile.md` under **Finish**. Any single video c
 | **Bold** | loud, fast, social | words pop and bounce, a white flash at every cut, highlight blocks | launches, social feeds, younger audiences |
 | **Clean** | calm, product-like | words rise and settle, no flash or spin, the accent word turns the accent colour | software, services, explainers |
 | **Editorial** | considered, premium | slower, medium weights, outlines instead of fills, the accent word underlines | consulting, finance, health, anything with trust at stake |
+
+## Sound effects and speed
+
+Sound is half of what makes a finish feel produced. The finish places it for them: a whoosh on each cut and screen recording, a pop as a word, chip or tick lands, a click on each click, a chime on a check and on the logo. It follows the style (Bold hears all of it, Editorial almost none) and sits under the voice. Set `"sfx": "off"` for a video that should be silent apart from voice and music.
+
+AI voices often read a touch slowly. A `speed` of 1.05 to 1.15 tightens the whole cut, picture and voice together, with no change in pitch. Set it once under **Finish** in the profile when they say the voice feels slow; don't go above 1.2.
 
 ## Alternative hooks
 

@@ -9,11 +9,14 @@ Usage:
   python3 build.py WORKDIR --hook B        the same cut with opening "B" from finish.json's hooks
   python3 build.py WORKDIR --style clean   override finish.json's style (bold, clean, editorial)
   python3 build.py WORKDIR --cover         also write WORK/cover/, a one-frame cover for the post
+  python3 build.py WORKDIR --guides        tint the areas Reels, TikTok and Shorts cover with their buttons
+                                           and captions, for checking the preview sheet. Rebuild without it to render.
 
 It also writes WORK/preview-times.txt: the moment each overlay has fully landed,
-plus every scene without one, for the preview sheet.
+plus every scene without one, for the preview sheet, and WORK/sfx-cues.json:
+where each sound effect lands, for polish.py.
 """
-import argparse, html, json, os, re, shutil, subprocess, sys
+import argparse, hashlib, html, json, os, re, shutil, subprocess, sys, urllib.request
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ap = argparse.ArgumentParser()
@@ -21,6 +24,7 @@ ap.add_argument("work")
 ap.add_argument("--hook")
 ap.add_argument("--style")
 ap.add_argument("--cover", action="store_true")
+ap.add_argument("--guides", action="store_true")
 args = ap.parse_args()
 work = os.path.abspath(args.work)
 proj = os.path.join(work, "project")
@@ -114,8 +118,87 @@ def emphasize(sel, at):
     else:
         T.append(f'tl.to("{sel}", {{color:"{on_acc}", backgroundColor:"{acc}", duration:0.15}}, {r3(at)});')
 
+# Sound effects: (sound, time) cues on the render's clock, mixed in by polish.py.
+# Each style hears a different amount: Bold all of them, Clean no pops on single
+# words, Editorial only the quiet ones.
+SFX_ON = str(fin.get("sfx", "auto")).lower() != "off"
+SFX_STYLE = {"bold": {"whoosh": 0.35, "pop": 0.3, "click": 0.6, "chime": 0.35},
+             "clean": {"whoosh": 0.25, "pop": 0.18, "click": 0.5, "chime": 0.3},
+             "editorial": {"whoosh": 0.12, "pop": 0.0, "click": 0.4, "chime": 0.25}}[STYLE]
+CUES = []
+
+def cue(sound, at, minor=False):
+    """A sound at a moment. Minor cues (single words popping in) are skipped outside Bold."""
+    if minor and STYLE != "bold":
+        return
+    CUES.append((sound, r3(at)))
+
 def block(eid, start, end, inner, track=5):
     E.append(f'<div id="{eid}" class="clip ov" data-start="{r3(start)}" data-duration="{r3(end - start)}" data-track-index="{track}">{inner}</div>')
+
+# ---------- screen recordings ----------
+def probe(path):
+    out = subprocess.run(["ffprobe", "-v", "error", "-select_streams", "v:0", "-show_entries", "stream=width,height",
+                          "-of", "csv=p=0", path], check=True, text=True, capture_output=True).stdout
+    return tuple(int(x) for x in out.strip().split(",")[:2])
+
+def screen(o, oid, st, en):
+    """A real screen recording in a framed card that tilts in, with optional click rings,
+    zooms and highlight boxes. Positions in clicks and highlights are shares (0 to 1) of
+    the recording's own width and height, so they don't depend on where the card sits."""
+    src = o["file"]
+    want = f'{src}|{o.get("from", 0)}|{r3(en - st)}'
+    name = f"assets/scr-{hashlib.sha1(want.encode()).hexdigest()[:10]}.mp4"
+    out = os.path.join(proj, name)
+    if not os.path.exists(out):
+        # Trim to the overlay, drop the sound, make it a plain 30fps H.264 the renderer can seek.
+        raw = src
+        if re.match(r"https?://", src):
+            raw = os.path.join(work, "screen-download")
+            with urllib.request.urlopen(src) as r, open(raw, "wb") as f:
+                shutil.copyfileobj(r, f)
+        elif not os.path.isabs(src):
+            raw = os.path.join(work, src)
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-ss", f'{o.get("from", 0)}', "-i", raw, "-t", f"{en - st + 0.2:.3f}",
+                        "-an", "-vf", "scale=trunc(min(iw\\,1600)/2)*2:-2:flags=lanczos", "-r", "30", "-c:v", "libx264", "-crf", "18",
+                        "-preset", "fast", "-pix_fmt", "yuv420p", out], check=True)
+    rw, rh = probe(out)
+    pos = o.get("pos", "center")
+    on_avatar = scene_at(st + 0.01)["kind"] == "avatar"
+    # Room on screen, inside the apps' safe zones: the middle band, below a top graphic
+    # and above the captions, or a band at the top or bottom. On an avatar beat only
+    # the band above the card is free.
+    max_h = 330 if on_avatar else 940 if pos == "center" else 600
+    w = min(o.get("width", 880), 880)
+    h = round(w * rh / rw)
+    if h > max_h:
+        h, w = max_h, round(max_h * rw / rh)
+    left = 70 + (890 - w) // 2
+    top = {"top": 220, "bottom": 1920 - 400 - h}.get("top" if on_avatar else pos, 560 + (940 - h) // 2)
+    d = r3(en - st)
+    E.append(f'<video id="{oid}v" class="clip scr" style="inset:auto;left:{left}px;top:{top}px;width:{w}px;height:{h}px" src="{name}" muted playsinline data-start="{r3(st)}" data-duration="{d}" data-track-index="13"></video>')
+    marks = []
+    for k, c in enumerate(o.get("clicks", [])):
+        cx, cy = left + c["x"] * w, top + c["y"] * h
+        marks.append(f'<div class="ring" id="{oid}r{k}" style="left:{round(cx - 60)}px;top:{round(cy - 60)}px"></div>')
+    for k, b in enumerate(o.get("highlights", [])):
+        marks.append(f'<div class="hl" id="{oid}h{k}" style="left:{round(left + b["x"] * w - 10)}px;top:{round(top + b["y"] * h - 10)}px;width:{round(b["w"] * w + 20)}px;height:{round(b["h"] * h + 20)}px"></div>')
+    if marks:
+        block(f"{oid}m", st, en, "".join(marks), track=14)
+    tilt, dur = {"bold": (38, 0.9), "clean": (30, 0.9), "editorial": (16, 1.1)}[STYLE]
+    T.append(f'tl.fromTo("#{oid}v", {{rotationX:{tilt}, y:260, opacity:0, transformPerspective:1600}}, {{rotationX:0, y:0, opacity:1, duration:{dur}, ease:"expo.out"}}, {r3(st + 0.04)});')
+    T.append(f'tl.to("#{oid}v", {{opacity:0, y:-40, duration:0.25, ease:"power2.in"}}, {r3(en - 0.25)});')
+    cue("whoosh", st)
+    for k, c in enumerate(o.get("clicks", [])):
+        if o.get("zoom", True):
+            # Lean in towards the click, then settle back.
+            T.append(f'tl.to("#{oid}v", {{scale:1.07, transformOrigin:"{round(c["x"] * 100)}% {round(c["y"] * 100)}%", duration:0.7, ease:"power2.inOut"}}, {r3(c["at"] - 0.7)});')
+            T.append(f'tl.to("#{oid}v", {{scale:1, duration:0.6, ease:"power2.inOut"}}, {r3(min(c["at"] + 0.5, en - 0.9))});')
+        T.append(f'tl.fromTo("#{oid}r{k}", {{scale:0.3, opacity:1}}, {{scale:2.4, opacity:0, duration:0.8, ease:"power2.out"}}, {r3(c["at"])});')
+        cue("click", c["at"])
+    for k, b in enumerate(o.get("highlights", [])):
+        T.append(f'tl.fromTo("#{oid}h{k}", {{scale:1.12, opacity:0}}, {{scale:1, opacity:1, duration:0.4, ease:"back.out(2)"}}, {r3(b["at"])});')
+        cue("pop", b["at"])
 
 # ---------- scenes ----------
 for s in scenes:
@@ -137,6 +220,8 @@ for s in scenes:
         E.append(f'<video id="v{i}" class="clip brvid" src="{s["clip"]}" muted playsinline data-start="{st}" data-duration="{d}" data-track-index="3"></video>')
         E.append(f'<div id="sh{i}" class="clip shade" data-start="{st}" data-duration="{d}" data-track-index="4"></div>')
         T.append(f'tl.fromTo("#v{i}", {{scale:1.12}}, {{scale:1.0, duration:{d}, ease:"power1.out"}}, {st});')
+    if i > 1:
+        cue("whoosh", st)
     if i > 1 and STY["flash"]:
         E.append(f'<div id="fl{i}" class="clip flash" data-start="{r3(st - 0.08)}" data-duration="0.45" data-track-index="10"></div>')
         T.append(f'tl.fromTo("#fl{i}", {{opacity:{STY["flash"]}}}, {{opacity:0, duration:0.37, ease:"power2.out"}}, {st});')
@@ -159,6 +244,7 @@ for n, o in enumerate(overlays):
             if size in ("slam", "huge"):
                 for k in range(cnt):
                     pop(f"#{oid}l{li}_{k}", line["at"] + k * line.get("step", 0.2), "scale:2.2, opacity:0", "scale:1, opacity:1", 0.3, "power4.out")
+                    cue("pop", line["at"] + k * line.get("step", 0.2), minor=True)
             else:
                 rise(f"{oid}l{li}_", cnt, line["at"], line.get("step", 0.15))
         block(oid, st, en, f'<div class="head {o.get("pos", "top")}">{"<br>".join(rows)}</div>')
@@ -169,6 +255,7 @@ for n, o in enumerate(overlays):
         block(oid, st, en, f'<div class="head top"><div class="kicker" id="{oid}k">{esc(o["kicker"])}</div><div class="reveal">{logo_html("logo big-logo")}<span class="rtitle" id="{oid}t">{esc(o["title"])}</span></div></div>')
         pop(f"#{oid}k", o["kickerAt"], "x:-80, opacity:0", "x:0, opacity:1", 0.6, "expo.out")
         pop(f"#{oid} .big-logo", o["titleAt"] - 0.1, "scale:0, rotation:-90", "scale:1, rotation:0", 0.6, "back.out(2.2)")
+        cue("chime", o["titleAt"])
         pop(f"#{oid}t", o["titleAt"], "x:-60, opacity:0", "x:0, opacity:1", 0.5, "expo.out")
     elif t == "counter":
         reels = "".join(
@@ -178,6 +265,7 @@ for n, o in enumerate(overlays):
         pills = "".join(f'<span class="pill" id="{oid}p{k}">{esc(p["text"])}</span>' for k, p in enumerate(o.get("pills", [])))
         block(oid, st, en, f'<div class="counter"><div class="num">{reels}</div><div class="label">{esc(o.get("label", "").upper())}</div><div class="pills">{pills}</div></div>')
         pop(f"#{oid} .counter", o["at"] - 0.15, "scale:0.7, opacity:0", "scale:1, opacity:1", 0.45, "back.out(2)")
+        cue("pop", o["at"])
         dk = 0
         for k, ch in enumerate(o["value"]):
             if ch.isdigit():
@@ -185,6 +273,7 @@ for n, o in enumerate(overlays):
                 dk += 1
         for k, p in enumerate(o.get("pills", [])):
             pop(f"#{oid}p{k}", p["at"], "y:40, scale:0.5, opacity:0", "y:0, scale:1, opacity:1", 0.5, "back.out(2.5)")
+            cue("pop", p["at"], minor=True)
     elif t == "search":
         ticks = "".join(f'<div class="tick" id="{oid}t{k}"><b>✓</b> {esc(x["text"])}</div>' for k, x in enumerate(o.get("ticks", [])))
         foot = o.get("footer")
@@ -192,10 +281,12 @@ for n, o in enumerate(overlays):
         block(oid, st, en, f'''<div class="search" id="{oid}s"><svg viewBox="0 0 24 24" class="mag"><circle cx="10.5" cy="10.5" r="6.5" fill="none" stroke="currentColor" stroke-width="2.4"/><path d="M15.5 15.5L21 21" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg><div class="stext"><span class="ph" id="{oid}ph">{esc(o["placeholder"])}</span><span class="typed" id="{oid}ty">{esc(o["typed"])}</span><span class="caret" id="{oid}c"></span></div><span class="kbd">⌘K</span></div><div class="ticks">{ticks}{foot_html}</div>''')
         pop(f"#{oid}s", st + 0.05, "y:-80, opacity:0, scale:0.9", "y:0, opacity:1, scale:1", 0.55, "expo.out")
         T.append(f'tl.to("#{oid}ph", {{opacity:0, duration:0.15}}, {r3(o["typeAt"] - 0.05)});')
+        cue("click", o["typeAt"] - 0.05)
         T.append(f'tl.fromTo("#{oid}ty", {{clipPath:"inset(0 100% 0 0)"}}, {{clipPath:"inset(0 0% 0 0)", duration:{o.get("typeDur", 1.0)}, ease:"steps({max(len(o["typed"]), 1)})"}}, {r3(o["typeAt"])});')
         T.append(f'tl.fromTo("#{oid}c", {{opacity:1}}, {{opacity:0, duration:0.4, repeat:{int((en - st) / 0.4)}, yoyo:true, ease:"steps(1)"}}, {r3(st + 0.1)});')
         for k, x in enumerate(o.get("ticks", [])):
             pop(f"#{oid}t{k}", x["at"], f"x:{-120 if k % 2 == 0 else 120}, opacity:0", "x:0, opacity:1", 0.5, "back.out(2)")
+            cue("pop", x["at"])
         if foot:
             pop(f"#{oid}f", foot["at"], "scale:1.6, opacity:0", "scale:1, opacity:1", 0.4, "power4.out")
     elif t == "chips":
@@ -211,11 +302,13 @@ for n, o in enumerate(overlays):
             pop(f"#{oid}sub", sub["at"], "y:30, opacity:0", "y:0, opacity:1", 0.5, "expo.out")
         for k, c in enumerate(o["chips"]):
             pop(f"#{oid}c{k}", c["at"], f"scale:0, rotation:{-12 if k % 2 == 0 else 12}", "scale:1, rotation:0", 0.5, "back.out(2.4)")
+            cue("pop", c["at"])
             if k and o.get("joiner"):
                 pop(f"#{oid}j{k}", c["at"] - 0.4, "opacity:0", "opacity:1", 0.3, "none")
     elif t == "check":
         block(oid, st, en, f'<div class="head top"><div class="nothing"><span class="ok" id="{oid}ok">✓</span><span id="{oid}tx">{esc(o["text"])}</span></div></div>')
         pop(f"#{oid}ok", o["at"], "scale:0, rotation:-180", "scale:1, rotation:0", 0.5, "back.out(2.5)")
+        cue("chime", o["at"])
         pop(f"#{oid}tx", o["at"] + 0.1, "x:40, opacity:0", "x:0, opacity:1", 0.45, "expo.out")
     elif t == "rail":
         block(oid, st, en, f'<div class="head top"><div class="kicker" id="{oid}k">{esc(o["kicker"].upper())}</div><div class="huge" id="{oid}h">{esc(o["title"])}</div></div><div class="track" id="{oid}tr"><span class="node nA"></span><div class="rail"><div class="railfill" id="{oid}rf"></div></div><span class="node nB" id="{oid}nB"></span><div class="tl tlA">{esc(o["left"].upper())}</div><div class="tl tlB">{esc(o["right"].upper())}</div></div>')
@@ -224,6 +317,7 @@ for n, o in enumerate(overlays):
         pop(f"#{oid}tr", st + 0.15, "opacity:0", "opacity:1", 0.3, "none")
         T.append(f'tl.fromTo("#{oid}rf", {{scaleX:0}}, {{scaleX:1, duration:{o.get("fillDur", 1.5)}, ease:"power2.inOut"}}, {r3(o["fillAt"])});')
         done = o["fillAt"] + o.get("fillDur", 1.5)
+        cue("pop", done)
         T.append(f'tl.fromTo("#{oid}nB", {{opacity:0.35}}, {{opacity:1, duration:0.2}}, {r3(done)});')
         T.append(f'tl.fromTo("#{oid}nB", {{scale:1}}, {{scale:1.6, duration:0.18, yoyo:true, repeat:1, immediateRender:false}}, {r3(done)});')
     elif t == "checklist":
@@ -236,16 +330,28 @@ for n, o in enumerate(overlays):
         for k, r in enumerate(o["rows"]):
             pop(f"#{oid}r{k}", r["at"] - 0.35, "x:-60, opacity:0", "x:0, opacity:1", 0.4, "expo.out")
             pop(f"#{oid}k{k}", r["at"], "scale:0, opacity:0", "scale:1, opacity:1", 0.35, "back.out(3)")
+            cue("pop", r["at"])
         if res:
             pop(f"#{oid}res", res["at"], "y:30, opacity:0", "y:0, opacity:1", 0.45, "back.out(2)")
+            cue("chime", res["at"])
     elif t == "outro":
         lines = "".join(f"<div>{esc(x)}</div>" for x in o["lines"])
         block(oid, st, en, f'<div class="endtop" id="{oid}l">{logo_html("logo end-logo")}</div><div class="endbot" id="{oid}b">{lines}</div>')
         pop(f"#{oid}l", o.get("logoAt", st + 0.1), "scale:0, rotation:-120, opacity:0", "scale:1, rotation:0, opacity:1", 0.7, "back.out(2)")
+        cue("chime", o.get("logoAt", st + 0.1))
         pop(f"#{oid}b", o.get("linesAt", st + 0.45), "y:60, opacity:0", "y:0, opacity:1", 0.6, "expo.out")
         T.append(f'tl.fromTo("#fade", {{opacity:0}}, {{opacity:1, duration:0.35, ease:"none"}}, {r3(o.get("fadeAt", TOTAL - 0.38))});')
+    elif t == "screen":
+        screen(o, oid, st, en)
+    elif t == "raw":
+        # A custom scene: hand-written elements (each a top-level clip with its own
+        # data-start, data-duration and data-track-index) and GSAP tweens on `tl`.
+        E.extend(o["elements"])
+        T.extend(o["tweens"])
     else:
         sys.exit(f"unknown overlay type {t!r}")
+    for x in o.get("sfx", []):
+        cue(x["sound"], x["at"])
 
 # ---------- captions ----------
 cap_scenes = set(fin.get("captionScenes", []))
@@ -271,6 +377,12 @@ face = "".join(
 vars_css = (f':root {{ --bg: {brand["bg"]}; --fg: {brand["fg"]}; --accent: {brand["accent"]}; --on-accent: {brand.get("onAccent", brand["bg"])};'
             f' --heading: "{fonts["heading"]["family"]}", ui-sans-serif, system-ui, sans-serif; --mono: "{fonts["mono"]["family"]}", ui-monospace, monospace; }}\n')
 css = face + vars_css + open(os.path.join(HERE, "style.css")).read()
+# A look: the person's own visual language, from reference images they sent. It is
+# CSS laid over the base style, which still decides how things move.
+look = fin.get("look") or {}
+if look.get("css"):
+    lp = look["css"] if os.path.isabs(look["css"]) else os.path.join(work, look["css"])
+    css += f"\n/* look: {look.get('name', os.path.basename(lp))} */\n" + open(lp).read()
 
 def page(duration, body, tweens):
     return f'''<!doctype html>
@@ -309,9 +421,15 @@ if os.path.exists(os.path.join(proj, "assets", "narration.m4a")):
 if os.path.exists(os.path.join(proj, "assets", "music.m4a")):
     # Mixed and ducked under the voice by music.py.
     audio.append(f'<audio id="music" src="assets/music.m4a" data-start="0" data-duration="{TOTAL}" data-track-index="12" data-volume="1"></audio>')
-body = "\n".join(audio + E + [f'<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>'])
+guides = []
+if args.guides:
+    # Where the apps' own buttons, names and captions sit on a 9:16 post (the union of
+    # Reels, TikTok and Shorts). Nothing that has to be read should land in the tint.
+    guides.append(f'<div id="safe" class="clip fx guides" data-start="0" data-duration="{TOTAL}" data-track-index="99">'
+                  '<i class="g-top"></i><i class="g-bottom"></i><i class="g-right"></i></div>')
+body = "\n".join(audio + E + [f'<div id="fade" class="clip fx" data-start="0" data-duration="{TOTAL}" data-track-index="11"></div>'] + guides)
 write_project(proj, page(TOTAL, body, "\n".join(T)), "finish")
-print(f"wrote {proj}/index.html: style {STYLE}{', hook ' + args.hook if args.hook else ''}, {len(E)} elements, {len(T)} tweens, {ci} captions")
+print(f"wrote {proj}/index.html: style {STYLE}{', look ' + look.get('name', '') if look.get('css') else ''}{', hook ' + args.hook if args.hook else ''}, {len(E)} elements, {len(T)} tweens, {ci} captions{', SAFE-ZONE GUIDES ON (do not render)' if args.guides else ''}")
 
 # ---------- preview times: each overlay once it has fully landed, and every scene ----------
 def landed(o):
@@ -344,6 +462,20 @@ for t in sorted(moments):
 times = ",".join(str(t) for t in picked)
 open(os.path.join(work, "preview-times.txt"), "w").write(times + "\n")
 print(f"preview times ({len(picked)}): {times}")
+
+# ---------- sound-effect cues, for polish.py ----------
+cues = []
+if SFX_ON:
+    last = {}
+    for snd, t in sorted(CUES, key=lambda c: c[1]):
+        vol = SFX_STYLE.get(snd, 0.3)
+        # Nothing in the opening beat of the hook, none after the fade, no machine-gun repeats.
+        if vol <= 0 or t < 0.15 or t > TOTAL - 0.2 or t - last.get(snd, -9) < 0.22:
+            continue
+        last[snd] = t
+        cues.append({"sound": snd, "at": t, "volume": vol})
+json.dump({"style": STYLE, "hook": args.hook, "cues": cues}, open(os.path.join(work, "sfx-cues.json"), "w"), indent=1)
+print(f"sound effects: {len(cues) if SFX_ON else 'off'}")
 
 # ---------- cover: one still frame for the post ----------
 if args.cover:

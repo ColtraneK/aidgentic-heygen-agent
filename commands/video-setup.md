@@ -140,11 +140,11 @@ ffmpeg -f lavfi -i "color=c=<bg hex>:s=1080x1920" -frames:v 1 plate.png
 
 Upload it to their HeyGen account: `create_asset_upload` (`filename: "graphics plate.png"`, `contentType: "image/png"`, the exact `sizeBytes`), PUT the file's bytes to the returned `upload_url`, then `complete_asset_upload`. It's free. If the upload fails, skip it and leave the plate line empty; graphics-only beats then fall back to b-roll.
 
-Write the **Finish** section with the style, the music mood and the plate's asset ID.
+Write the **Finish** section with the style, the music mood and the plate's asset ID. Sound effects are on and the speed is 1 unless they say otherwise.
 
 **It can't run here.** Describe the three styles in one line each and ask the same question. Write the style and music mood, and leave the plate line empty. The finish runs later, in a session that can.
 
-Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice."*
+Close on what changed: *"That's saved. Every video plan starts from it, so you won't explain your business twice. If there's a look you love, send me screenshots any time and I'll make your videos look like that."* Don't ask for them now.
 
 ---
 
@@ -239,6 +239,8 @@ HyperFrames finish by default (the `hyperframes-finish` skill), where the sessio
 **Motion style:** [Bold / Clean / Editorial]
 **Music:** [none / a mood, e.g. "warm and upbeat"]
 **Graphics plate:** `[asset_id]` (a plain [bg hex] image for graphics-only beats)
+**Sound effects:** on · **Speed:** 1 (1.05 to 1.15 if the voice reads slowly)
+**Look:** none yet (made from reference images they send, in `Video Styles/Looks/`)
 
 ## Voice rules for scripts
 First person. Plain speech, contractions, short sentences. Numbers as they'd say them. No claims the sources don't make.

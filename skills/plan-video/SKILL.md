@@ -56,6 +56,8 @@ Split the script into 8 to 11 beats and assign each one per `heygen-direction.md
 - up to two **graphics-only** beats where the line is just a number, a list or a comparison. They need no generated clip, so they save its credits. Skip this when the profile has no graphics plate.
 - up to two **other hooks** for the first beat: different words or a different graphic on screen over the same spoken line
 - a calm top third in the prompt of any b-roll beat with a top graphic
+- one or two **custom moments**: the lines that carry the video get a graphic designed for them alone, written in the Graphic column as `custom:` and the idea in a few words (see `motion-graphics.md`)
+- a **screen** graphic for any line that walks through something on a screen (a setting, a click path, the product). Ask for that recording with the plan, as `motion-graphics.md` says
 
 Show it as a table they can read in thirty seconds. Keep the prompts out of the table; summarize each shot in a few words. Leave out the Graphic column when there's no finish.
 
@@ -66,7 +68,7 @@ Show it as a table they can read in thirty seconds. Keep the prompts out of the 
 | 5 | "Four hours became thirty minutes." | graphics | full screen, no clip | rail: 4 hours to 30 minutes |
 | 8 | "Every system has a human approval step..." | You, in a scene | At your desk, approving something on your laptop | check: "A human signs off." |
 
-Under the table, one line for the other hooks (*"Other openings: B, a counter: 4 hours to 30 minutes. C, a headline: 'Your inbox, handled.'"*) and one for the style and music (*"Clean style, warm and upbeat music."*). They change anything they like with the same reply.
+Under the table, one line for the other hooks (*"Other openings: B, a counter: 4 hours to 30 minutes. C, a headline: 'Your inbox, handled.'"*) and one for the style, music, sound and speed (*"Clean style, warm and upbeat music, sound effects on, 1.1x speed."*). They change anything they like with the same reply.
 
 ## 5. Price it and ask
 
