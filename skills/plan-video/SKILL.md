@@ -86,6 +86,10 @@ Say what's happening and how long: *"Making your clips now, about a minute each,
 
 **Showpiece route:** `create_video_agent` in `chat` mode with their look, voice and brand kit ID, the script word for word, and a shot plan in the prompt that asks for the presenter on screen under half the time and a visual change every few seconds. Share the session link. When it pauses for input, show them the choices.
 
+## 6b. The finish
+
+If `Video Profile.md` has a **Finish** section saying HyperFrames, or they ask for more animation, follow the `hyperframes-finish` skill once the Studio render completes. It's built and rendered on this computer and spends no credits, so it needs no render yes. Hand over the finished file and the HeyGen link together, using that skill's hand-over in place of step 7's first two lines.
+
 ## 7. Hand it over
 
 > **[Title]** is ready: [video_page_url]. [length] seconds, [credits] credits.

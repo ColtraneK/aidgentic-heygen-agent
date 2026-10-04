@@ -198,6 +198,9 @@ Every video plan reads this first. Where a scheduled prompt disagrees with this 
 ## Call to action
 [exact wording]
 
+## Finish
+HyperFrames finish by default (the `hyperframes-finish` skill), where the session can run it.
+
 ## Voice rules for scripts
 First person. Plain speech, contractions, short sentences. Numbers as they'd say them. No claims the sources don't make.
 

@@ -12,7 +12,7 @@ Read this before planning or rendering anything. It's the craft and the mechanic
 - the presenter comes from avatar looks already in their HeyGen account
 - the finished video is a link to their HeyGen library
 
-Never try to download a render, save it to the Project, or move it through Google Drive or anywhere else. Never ask them to upload a photo through the chat. Photos go into HeyGen through the HeyGen app (Avatars, then Create, then Photo avatar).
+Never try to download a render, save it to the Project, or move it through Google Drive or anywhere else. The one exception is the `hyperframes-finish` skill, in a session that can download files: it downloads the finished Studio render and its captions to build an animated cut locally. Never ask them to upload a photo through the chat. Photos go into HeyGen through the HeyGen app (Avatars, then Create, then Photo avatar).
 
 ---
 

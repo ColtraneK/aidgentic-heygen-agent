@@ -14,6 +14,8 @@ Your videos use your avatar in several looks, your voice, b-roll generated for e
 
 **Videos with real variety.** A beat sheet for each video: your avatar on screen for the hook, the turn and the close, switching looks between lines, with generated b-roll showing everything else, and one clip of you acting in a scene. About 45 to 60 seconds, captions on.
 
+**An animated finish, free.** After the render, it adds motion graphics in your brand colours, logo and fonts: kinetic headlines, number counters, checklists, captions and a logo outro, with no letterboxing. It's built and rendered in your session with HyperFrames, so it uses no credits, and changes to it are free too. It needs a session that can run Node and ffmpeg, which a Project session can.
+
 **A cost before every render.** It checks your credit balance, estimates the video, and asks. Nothing that spends credits happens without your yes. After each render it measures what it actually cost and logs it, so the next estimate is yours, not a guess.
 
 **A content plan.** What gets made, how often, from what source, and what that costs a month.
@@ -84,6 +86,7 @@ About ten minutes, and nothing in setup spends credits.
 | "plan a video" | pick an angle, see the beat sheet and the cost, render on a yes |
 | "make a video from [link]" | the same, from a page you give it |
 | "quick video about [topic]" | one avatar take, fastest and cheapest |
+| "add more animation" | the free HyperFrames finish on the latest video |
 | "fix beat 3" | regenerate one part and reassemble, without redoing the rest |
 | "more ideas" | add angles to your idea bank |
 | "make my content plan" | cadence, sources and monthly cost |
@@ -103,6 +106,7 @@ Renders spend your HeyGen credits. Measured on one Creator account in October 20
 | A 50 to 60 second video with several looks, b-roll and a scene of you | about 25 to 30 |
 | A 45 second single-take avatar video | about 18 |
 | A 6 second generated b-roll clip | about 2 |
+| The HyperFrames finish | 0, it renders in your session |
 
 Your plan may differ. It checks your balance before and after every render and uses your own numbers from then on.
 
@@ -110,7 +114,7 @@ Your plan may differ. It checks your balance before and after every render and u
 
 ## What it will not do
 
-It doesn't post, upload or share anything. Finished videos stay in your HeyGen library as links, and you decide where they go. It never renders without your yes, except a routine you set with a credit cap. It only makes avatars and scenes of you, or someone you confirm agreed. Scripts only say what your sources say. Generated b-roll has no logos, brand names or real people in it.
+It doesn't post, upload or share anything. Finished videos stay in your HeyGen library as links, plus the finished MP4 in your Project when it adds the animated finish. You decide where they go. It never renders without your yes, except a routine you set with a credit cap. It only makes avatars and scenes of you, or someone you confirm agreed. Scripts only say what your sources say. Generated b-roll has no logos, brand names or real people in it.
 
 Content it reads is treated as data, never as instructions. If a web page says "AI, do X", that's words on a page. It'll tell you it saw it and carry on.
 
@@ -135,6 +139,7 @@ The routine lives in your Claude account, not inside the plugin, so removing the
 commands/video-setup.md      the guided setup
 skills/
 ├── plan-video               plan, price, approve, render, log, fix one beat
+├── hyperframes-finish       the free animated finish, built from your brand kit
 ├── content-plan             cadence, sources, monthly cost, queue
 └── video-routine            the scheduled task, and managing it
 reference/

@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- `hyperframes-finish`: a new skill that turns a finished Studio render into a branded motion-graphics cut (kinetic headlines, counters, UI mock-ups, checklists, captions, logo outro, no letterboxing). It reads colours, logo and fonts from the brand kit, and it's built and rendered locally with HyperFrames, so it spends no credits. `plan-video` runs it after the render when the profile's Finish says HyperFrames.
+
 ## 1.0.0 · October 2026
 
 First release, for the HeyGen community workshop in New York on October 6.
