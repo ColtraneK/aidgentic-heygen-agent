@@ -74,7 +74,7 @@ Look at the snapshots before rendering, one per scene. Check for text running of
 
 ## 5. Hand it over
 
-Save `finish.mp4` to `Videos/[date] [angle].mp4` in their Project, and tar the `WORK/project` folder (without `node_modules`) beside it so later tweaks start from it. Keep `finish.json` with the plan in `Video Plans/`.
+Save `finish.mp4` to `Videos/[date] [angle].mp4` in their Project. Beside it, save the work folder as `Videos/[date] [angle] source.tar.gz`, leaving out `node_modules` and `render.mp4` (`tar --exclude=node_modules --exclude=render.mp4 -czf ... -C WORK .`), so later fixes start from it instead of from a new HeyGen render. Keep a copy of `finish.json` with the plan in `Video Plans/`.
 
 > **[Title], finished** is ready: [file link]. [length] seconds, built here, no credits used. The plain HeyGen version is still at [video_page_url].
 
@@ -82,4 +82,23 @@ Log it in `Video Log.md` with 0 credits and route `Directed + HyperFrames finish
 
 ## Changing it later
 
-A change to the finish (a word, a colour, timing, an overlay) is an edit to `finish.json`, a rebuild and a re-render. It's free, so it needs no yes. A change to what's said or shown underneath needs a new HeyGen render, which goes back through plan-video's cost and yes.
+Start from the saved source: unpack `[date] [angle] source.tar.gz` into a work folder. Nothing gets re-rendered in HeyGen unless a new clip is needed, and never the whole video.
+
+- **On-screen words, colours, timing, an overlay:** edit `finish.json`, rebuild, re-render. Free, so no yes needed.
+- **One b-roll or scene clip is wrong:** regenerate only that clip, following *Fixing one beat* in `heygen-direction.md` (change one clause, keep the seed). Say the cost of that one clip and get a yes. There's no Studio reassembly. Swap it in, keeping the narration and every timing:
+
+  ```bash
+  python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/swap.py WORK --scene 3 --video "<new clip url>"
+  ```
+
+- **One avatar line is wrong:** render just that line with `create_video_from_avatar`, using the same look, voice and orientation as the scene. That's a few seconds of avatar, not the whole video. Say its cost and get a yes. Then take `video_url` and `subtitle_url` from `get_video` and swap it in:
+
+  ```bash
+  python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/swap.py WORK --scene 4 --video "<video_url>" --line --subs "<subtitle_url>"
+  ```
+
+  The new line's picture, voice and captions replace the scene. Everything after it moves by the difference in length: later scenes, the times in `finish.json`, and the captions. Re-time the overlays inside that scene to the new line's captions.
+
+After any swap: run `build.py WORK` from the same template folder, lint, snapshot the changed scene and the one after it, then render. Save over the video and its source, and log the fix in `Video Log.md` with the credits that one clip cost (0 for a finish-only change). `swap.py` keeps the previous files in `WORK/before-swap-N/` in case they want the old version back.
+
+A change that runs through most of the video (a new script, a different presenter) is a new video. That goes back through plan-video.

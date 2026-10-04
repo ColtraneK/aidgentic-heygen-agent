@@ -14,7 +14,7 @@ Your videos use your avatar in several looks, your voice, b-roll generated for e
 
 **Videos with real variety.** A beat sheet for each video: your avatar on screen for the hook, the turn and the close, switching looks between lines, with generated b-roll showing everything else, and one clip of you acting in a scene. About 45 to 60 seconds, captions on.
 
-**An animated finish, free.** After the render, it adds motion graphics in your brand colours, logo and fonts: kinetic headlines, number counters, checklists, captions and a logo outro, with no letterboxing. It's built and rendered in your session with HyperFrames, so it uses no credits, and changes to it are free too. It needs a session that can run Node and ffmpeg, which a Project session can.
+**An animated finish, free.** After the render, it adds motion graphics in your brand colours, logo and fonts: kinetic headlines, number counters, checklists, captions and a logo outro, with no letterboxing. It's built and rendered in your session with HyperFrames, so it uses no credits, and changes to it are free too. To fix one scene, only that clip or line is made again in HeyGen and swapped in, so the rest of the video never re-renders. It needs a session that can run Node and ffmpeg, which a Project session can.
 
 **A cost before every render.** It checks your credit balance, estimates the video, and asks. Nothing that spends credits happens without your yes. After each render it measures what it actually cost and logs it, so the next estimate is yours, not a guess.
 
@@ -87,7 +87,7 @@ About ten minutes, and nothing in setup spends credits.
 | "make a video from [link]" | the same, from a page you give it |
 | "quick video about [topic]" | one avatar take, fastest and cheapest |
 | "add more animation" | the free HyperFrames finish on the latest video |
-| "fix beat 3" | regenerate one part and reassemble, without redoing the rest |
+| "fix beat 3" | regenerate one part and reassemble, without redoing the rest. With the animated finish, only that clip or line is rendered and swapped in |
 | "more ideas" | add angles to your idea bank |
 | "make my content plan" | cadence, sources and monthly cost |
 | "put it on a schedule" | the routine |

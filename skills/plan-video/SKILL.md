@@ -108,6 +108,8 @@ Set the angle's status to `made`. Then one next step: *"Want me to fix anything,
 
 When they say a beat is off ("fix beat 3", "the end card's wrong", "that clip looks weird"), follow *Fixing one beat* in `heygen-direction.md`. Change one clause, keep the seed, regenerate that clip, reassemble. It's still a render: say the cost and get a yes first.
 
+If the video has a HyperFrames finish, follow *Changing it later* in the `hyperframes-finish` skill instead. Only the one clip or line gets rendered in HeyGen, and it's swapped into the finish locally with no Studio reassembly. A fix to on-screen text is free.
+
 ## Inside a scheduled routine
 
 When a scheduled prompt runs this skill, there's no one to ask. Follow the prompt's mode:

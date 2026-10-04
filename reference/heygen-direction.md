@@ -150,6 +150,8 @@ When they like the video but one beat is off, don't re-render everything:
 
 Every reassembly is a new render, so it still needs a yes and a cost.
 
+When the video has a HyperFrames finish, skip the reassembly. Regenerate only the one clip, or render only the one avatar line with `create_video_from_avatar`, and swap it into the finish locally (see the `hyperframes-finish` skill). The cost is that clip or line alone.
+
 ---
 
 ## When something fails
