@@ -28,8 +28,8 @@ ap.add_argument("--guides", action="store_true")
 args = ap.parse_args()
 work = os.path.abspath(args.work)
 proj = os.path.join(work, "project")
-scn = json.load(open(os.path.join(work, "scenes.json")))
-fin = json.load(open(os.path.join(work, "finish.json")))
+scn = json.load(open(os.path.join(work, "scenes.json"), encoding="utf-8"))
+fin = json.load(open(os.path.join(work, "finish.json"), encoding="utf-8"))
 brand = fin["brand"]
 TOTAL = scn["duration"]
 scenes = scn["scenes"]
@@ -64,7 +64,7 @@ def ts(s):
 
 subs = []
 subs_path = os.path.join(work, scn.get("subs") or "subs.srt")
-for blk in (open(subs_path).read().strip().split("\n\n") if os.path.exists(subs_path) else []):
+for blk in (open(subs_path, encoding="utf-8").read().strip().split("\n\n") if os.path.exists(subs_path) else []):
     lines = blk.strip().split("\n")
     if len(lines) < 3:
         continue
@@ -376,13 +376,13 @@ face = "".join(
     for f in (fonts["heading"], fonts["mono"]) for w in f["weights"])
 vars_css = (f':root {{ --bg: {brand["bg"]}; --fg: {brand["fg"]}; --accent: {brand["accent"]}; --on-accent: {brand.get("onAccent", brand["bg"])};'
             f' --heading: "{fonts["heading"]["family"]}", ui-sans-serif, system-ui, sans-serif; --mono: "{fonts["mono"]["family"]}", ui-monospace, monospace; }}\n')
-css = face + vars_css + open(os.path.join(HERE, "style.css")).read()
+css = face + vars_css + open(os.path.join(HERE, "style.css"), encoding="utf-8").read()
 # A look: the person's own visual language, from reference images they sent. It is
 # CSS laid over the base style, which still decides how things move.
 look = fin.get("look") or {}
 if look.get("css"):
     lp = look["css"] if os.path.isabs(look["css"]) else os.path.join(work, look["css"])
-    css += f"\n/* look: {look.get('name', os.path.basename(lp))} */\n" + open(lp).read()
+    css += f"\n/* look: {look.get('name', os.path.basename(lp))} */\n" + open(lp, encoding="utf-8").read()
 
 def page(duration, body, tweens):
     return f'''<!doctype html>
@@ -411,9 +411,9 @@ tl.seek(0);
 '''
 
 def write_project(folder, html_text, name):
-    open(os.path.join(folder, "index.html"), "w").write(html_text)
-    json.dump({"paths": {"assets": "assets"}, "media": {"autoProxy": True}}, open(os.path.join(folder, "hyperframes.json"), "w"), indent=2)
-    json.dump({"id": name, "name": name}, open(os.path.join(folder, "meta.json"), "w"), indent=2)
+    open(os.path.join(folder, "index.html"), "w", encoding="utf-8").write(html_text)
+    json.dump({"paths": {"assets": "assets"}, "media": {"autoProxy": True}}, open(os.path.join(folder, "hyperframes.json"), "w", encoding="utf-8"), indent=2)
+    json.dump({"id": name, "name": name}, open(os.path.join(folder, "meta.json"), "w", encoding="utf-8"), indent=2)
 
 audio = []
 if os.path.exists(os.path.join(proj, "assets", "narration.m4a")):
@@ -460,7 +460,7 @@ for t in sorted(moments):
     if not picked or t - picked[-1] > 0.3:
         picked.append(r3(t))
 times = ",".join(str(t) for t in picked)
-open(os.path.join(work, "preview-times.txt"), "w").write(times + "\n")
+open(os.path.join(work, "preview-times.txt"), "w", encoding="utf-8").write(times + "\n")
 print(f"preview times ({len(picked)}): {times}")
 
 # ---------- sound-effect cues, for polish.py ----------
@@ -474,7 +474,7 @@ if SFX_ON:
             continue
         last[snd] = t
         cues.append({"sound": snd, "at": t, "volume": vol})
-json.dump({"style": STYLE, "hook": args.hook, "cues": cues}, open(os.path.join(work, "sfx-cues.json"), "w"), indent=1)
+json.dump({"style": STYLE, "hook": args.hook, "cues": cues}, open(os.path.join(work, "sfx-cues.json"), "w", encoding="utf-8"), indent=1)
 print(f"sound effects: {len(cues) if SFX_ON else 'off'}")
 
 # ---------- cover: one still frame for the post ----------

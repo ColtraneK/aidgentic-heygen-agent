@@ -100,6 +100,13 @@ Claude Code does the rest, and there's no plugin to install there.
 
 **What the finish puts on your computer.** The first time, Claude Code downloads the finish scripts from this repo (a few MB), the HyperFrames renderer and the GSAP animation library from npm (about 130 MB) and a headless Chrome that draws the frames (about 260 MB). They go into folders in your own user account, not system-wide, and you can delete them afterwards (`~/.npm/_npx` and `~/.cache/hyperframes`). It also needs Node and ffmpeg (a free video tool). If either is missing, Claude Code asks before installing it, and the Code tab shows you each command before it runs. The finish only downloads; it renders on your computer and uploads nothing.
 
+It works the same on a Mac and on Windows.
+
+**Removing it later.** The easiest way is to ask Claude Code to remove the finish tools. To do it yourself:
+- The downloads are folders, not programs: delete `.npm/_npx` and `.cache/hyperframes` in your home folder.
+- ffmpeg: `brew uninstall ffmpeg` on a Mac, `winget uninstall ffmpeg` on Windows. It doesn't show in the installed programs list.
+- Node: on Windows, uninstall it from Settings, Apps. On a Mac, `brew uninstall node`, or the uninstall steps on nodejs.org if you used its installer.
+
 The finished video, its other openings and its cover are saved next to the note. The HeyGen links in the note work for about a week. No credits are spent in Claude Code; the finish is free.
 
 **Or do everything in Claude Code.** Install the plugin there (`/plugin marketplace add ColtraneK/aidgentic-heygen-agent`, then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`), connect HeyGen with `/mcp`, and run `/video-setup` in a folder. Everything works in one place, but a scheduled routine can't reach a folder on your computer, so keep the routine in a Cowork Project.

@@ -45,7 +45,7 @@ def fmt(t):
 
 def read_srt(path):
     cues = []
-    for blk in open(path).read().strip().split("\n\n"):
+    for blk in open(path, encoding="utf-8").read().strip().split("\n\n"):
         lines = blk.strip().split("\n")
         if len(lines) >= 3 and " --> " in lines[1]:
             a, b = lines[1].split(" --> ")
@@ -53,7 +53,7 @@ def read_srt(path):
     return cues
 
 def write_srt(path, cues):
-    with open(path, "w") as f:
+    with open(path, "w", encoding="utf-8") as f:
         for k, (a, b, text) in enumerate(cues, 1):
             f.write(f"{k}\n{fmt(a)} --> {fmt(b)}\n{text}\n\n")
 
@@ -81,7 +81,7 @@ def main():
 
     work = os.path.abspath(a.work)
     proj = os.path.join(work, "project")
-    scn = json.load(open(os.path.join(work, "scenes.json")))
+    scn = json.load(open(os.path.join(work, "scenes.json"), encoding="utf-8"))
     sc = next((s for s in scn["scenes"] if s["n"] == a.scene), None)
     if not sc:
         raise SystemExit(f"no scene {a.scene}; scenes.json has 1 to {len(scn['scenes'])}")
@@ -131,7 +131,7 @@ def main():
             run(["ffmpeg", "-y", "-loglevel", "error", "-i", inp, *args, "-vn", "-ac", "2", "-ar", "48000", p])
             parts.append(p)
         lst = os.path.join(work, "swap-parts.txt")
-        open(lst, "w").write("".join(f"file '{p}'\n" for p in parts))
+        open(lst, "w", encoding="utf-8").write("".join(f"file '{p}'\n" for p in parts))
         run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
              "-c:a", "aac", "-b:a", "192k", nar])
 
@@ -155,10 +155,10 @@ def main():
         scn["duration"] = round(scn["duration"] + delta, 3)
         fin_path = os.path.join(work, "finish.json")
         if os.path.exists(fin_path):
-            fin = json.load(open(fin_path))
+            fin = json.load(open(fin_path, encoding="utf-8"))
             shift(fin, old_end, delta)
-            json.dump(fin, open(fin_path, "w"), indent=2)
-        json.dump(scn, open(os.path.join(work, "scenes.json"), "w"), indent=2)
+            json.dump(fin, open(fin_path, "w", encoding="utf-8"), indent=2)
+        json.dump(scn, open(os.path.join(work, "scenes.json"), "w", encoding="utf-8"), indent=2)
         for p in parts + [lst]:
             os.remove(p)
         if os.path.exists(os.path.join(proj, "assets", "music-src.m4a")):

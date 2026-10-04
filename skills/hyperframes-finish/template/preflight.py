@@ -15,10 +15,12 @@ reachable too. Nothing is installed or changed.
 import argparse, shutil, subprocess, sys, urllib.request
 
 def ok_cmd(cmd):
-    if not shutil.which(cmd[0]):
+    exe = shutil.which(cmd[0])
+    if not exe:
         return False, "not installed"
     try:
-        out = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
+        # The full path, so Windows can run npx.cmd too.
+        out = subprocess.run([exe, *cmd[1:]], capture_output=True, text=True, timeout=20)
         line = (out.stdout or out.stderr).strip().splitlines()
         return out.returncode == 0, line[0][:60] if line else ""
     except Exception as e:

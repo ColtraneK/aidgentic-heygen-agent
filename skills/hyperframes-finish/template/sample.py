@@ -47,7 +47,7 @@ def main():
     dur = 4.6
     json.dump({"duration": dur, "scenes": [{"n": 1, "start": 0, "end": dur, "kind": "graphic", "clip": None}],
                "fonts": fonts, "logo": logo, "logoPlate": plate, "subs": None},
-              open(os.path.join(work, "scenes.json"), "w"), indent=2)
+              open(os.path.join(work, "scenes.json"), "w", encoding="utf-8"), indent=2)
     lines = [x.strip() for x in a.headline.split("|") if x.strip()][:2]
     last = len(lines) - 1
     json.dump({"brand": {"name": a.name, "bg": a.bg, "fg": a.fg, "accent": a.accent, "onAccent": a.on_accent or a.bg},
@@ -59,7 +59,7 @@ def main():
                     "emphasize": {"line": last, "word": len(lines[last].split()) - 1, "at": 1.4}},
                    {"type": "counter", "start": 0.6, "end": dur, "value": a.number, "label": a.label, "at": 1.0,
                     "pills": [{"text": t.strip(), "at": 2.4 + 0.3 * k} for k, t in enumerate(a.pills.split("|")[:3]) if t.strip()]}]},
-              open(os.path.join(work, "finish.json"), "w"), indent=2)
+              open(os.path.join(work, "finish.json"), "w", encoding="utf-8"), indent=2)
 
     shots = []
     for style in ((a.style,) if a.look else ("bold", "clean", "editorial")):

@@ -14,12 +14,12 @@ def mix(work, level=None):
     assets = os.path.join(work, "project", "assets")
     src, out = os.path.join(assets, "music-src.m4a"), os.path.join(assets, "music.m4a")
     cfg_path = os.path.join(work, "music.json")
-    cfg = json.load(open(cfg_path)) if os.path.exists(cfg_path) else {}
+    cfg = json.load(open(cfg_path, encoding="utf-8")) if os.path.exists(cfg_path) else {}
     if level is not None:
         cfg["level"] = level
     level = cfg.setdefault("level", 0.22)
-    json.dump(cfg, open(cfg_path, "w"), indent=2)
-    dur = json.load(open(os.path.join(work, "scenes.json")))["duration"]
+    json.dump(cfg, open(cfg_path, "w", encoding="utf-8"), indent=2)
+    dur = json.load(open(os.path.join(work, "scenes.json"), encoding="utf-8"))["duration"]
     fade_out = max(dur - 1.5, 0)
     narration = os.path.join(assets, "narration.m4a")
     bed = f"[0:a]atrim=0:{dur:.3f},asetpts=N/SR/TB,volume={level},afade=t=in:d=0.6,afade=t=out:st={fade_out:.3f}:d=1.5"
