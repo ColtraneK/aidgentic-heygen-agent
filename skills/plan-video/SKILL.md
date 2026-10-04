@@ -63,7 +63,7 @@ Show it as a table they can read in thirty seconds. Keep the prompts out of the 
 |---|---|---|---|---|
 | 1 | "If you run a small business..." | You, talking | City skyline look, three-finger gesture | headline: "Three people. One inbox." |
 | 3 | "We build AI agents..." | b-roll | Small team around a laptop, lime flowchart on the wall | captions |
-| 5 | "Four hours became thirty minutes." | graphics | rail: 4 hours to 30 minutes | rail |
+| 5 | "Four hours became thirty minutes." | graphics | full screen, no clip | rail: 4 hours to 30 minutes |
 | 8 | "Every system has a human approval step..." | You, in a scene | At your desk, approving something on your laptop | check: "A human signs off." |
 
 Under the table, one line for the other hooks (*"Other openings: B, a counter: 4 hours to 30 minutes. C, a headline: 'Your inbox, handled.'"*) and one for the style and music (*"Clean style, warm and upbeat music."*). They change anything they like with the same reply.

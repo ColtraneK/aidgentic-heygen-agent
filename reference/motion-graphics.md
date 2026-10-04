@@ -37,7 +37,7 @@ Keep words short. A headline line is at most about 18 characters at `big` and 12
 When a line is really just a number, a list or a comparison, a generated clip adds little. Make the beat graphics-only instead: the finish draws the whole frame in the brand colours, and HeyGen renders only the voice over a plain plate. That saves the clip, about 2 credits.
 
 - Up to two per video, never two in a row, never the hook or the close.
-- In the beat sheet, its *On screen* is "graphics" and its *Look or shot* is the graphic.
+- In the beat sheet, its *On screen* is "graphics", its *Look or shot* is "full screen, no clip", and its *Graphic* is the graphic.
 - In Studio it's an `image` scene of the brand's plain plate (the asset ID under **Finish** in `Video Profile.md`) with the line as its script. The plain HeyGen version shows the plate there; the finish fills it.
 - No plate in the profile, or no finish: make it a b-roll beat as usual.
 

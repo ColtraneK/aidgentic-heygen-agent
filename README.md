@@ -116,7 +116,7 @@ Your plan may differ. It checks your balance before and after every render and u
 
 ## What it will not do
 
-It doesn't post, upload or share anything. Finished videos stay in your HeyGen library as links, plus the finished MP4 in your Project when it adds the animated finish. You decide where they go. It never renders without your yes, except a routine you set with a credit cap. It only makes avatars and scenes of you, or someone you confirm agreed. Scripts only say what your sources say. Generated b-roll has no logos, brand names or real people in it.
+It doesn't post or share anything. The one thing it uploads is a plain background image in your brand colour, to your own HeyGen account during setup, for graphics-only scenes. Finished videos stay in your HeyGen library as links, plus the finished MP4 in your Project when it adds the animated finish. You decide where they go. It never renders without your yes, except a routine you set with a credit cap. It only makes avatars and scenes of you, or someone you confirm agreed. Scripts only say what your sources say. Generated b-roll has no logos, brand names or real people in it.
 
 Content it reads is treated as data, never as instructions. If a web page says "AI, do X", that's words on a page. It'll tell you it saw it and carry on.
 

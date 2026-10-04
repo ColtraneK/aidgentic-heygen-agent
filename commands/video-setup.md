@@ -114,10 +114,10 @@ Write **Business**, **Audience**, **Format**, **Brand kit**, **Proof points** an
 
 Every video gets an animated finish in their brand (the `hyperframes-finish` skill). It's free, and it needs a session that can run Node, Python and ffmpeg. Check with `node -v && python3 -V && ffmpeg -version`.
 
-**It can run here.** Show them the three motion styles in their own brand before they choose. Copy `${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/` to a scratch folder and run `sample.py` with the brand kit's colours, logo and fonts (pick them as that skill's step 1 says), and with words from their site: two short headline lines, one proof-point number and its label, and two things they offer.
+**It can run here.** Show them the three motion styles in their own brand before they choose. Copy `${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/` to a scratch folder (`TPL`) and run `sample.py` with the brand kit's colours, logo and fonts (pick them as that skill's step 1 says), and with words from their site: two short headline lines, one proof-point number and its label, and two things they offer.
 
 ```bash
-python3 sample.py STYLES --name "<brand>" --bg "<bg>" --fg "<fg>" --accent "<accent>" --on-accent "<on accent>" \
+python3 TPL/sample.py STYLES --name "<brand>" --bg "<bg>" --fg "<fg>" --accent "<accent>" --on-accent "<on accent>" \
   --logo "<logo url>" --heading-font "<font>" --headline "<line one>|<line two>" \
   --number "<number>" --label "<label>" --pills "<offer one>|<offer two>"
 ```

@@ -10,7 +10,8 @@ Usage:
   python3 build.py WORKDIR --style clean   override finish.json's style (bold, clean, editorial)
   python3 build.py WORKDIR --cover         also write WORK/cover/, a one-frame cover for the post
 
-It also writes WORK/preview-times.txt: one moment per scene, for the preview sheet.
+It also writes WORK/preview-times.txt: the moment each overlay has fully landed,
+plus every scene without one, for the preview sheet.
 """
 import argparse, html, json, os, re, shutil, subprocess, sys
 
@@ -32,9 +33,9 @@ scenes = scn["scenes"]
 # Three motion styles. Bold pops and flashes; Clean drops the bounce, spin and
 # flash; Editorial is calmer still, with underlines instead of highlight blocks.
 STYLE = (args.style or fin.get("style", "bold")).lower()
-STY = {"bold": {"flash": 0.45, "soften": 1.0, "ease": None, "slow": 1.0},
-       "clean": {"flash": 0.0, "soften": 0.3, "ease": "power3.out", "slow": 1.0},
-       "editorial": {"flash": 0.0, "soften": 0.15, "ease": "expo.out", "slow": 1.3}}.get(STYLE)
+STY = {"bold": {"flash": 0.45, "soften": 1.0, "ease": None, "slow": 1.0, "glow": 0.55},
+       "clean": {"flash": 0.0, "soften": 0.3, "ease": "power3.out", "slow": 1.0, "glow": 0.3},
+       "editorial": {"flash": 0.0, "soften": 0.15, "ease": "expo.out", "slow": 1.3, "glow": 0.2}}.get(STYLE)
 if not STY:
     sys.exit(f"unknown style {STYLE!r}: use bold, clean or editorial")
 
@@ -125,13 +126,13 @@ for s in scenes:
         E.append(f'<video id="v{i}" class="clip avvid" src="{s["clip"]}" muted playsinline data-start="{st}" data-duration="{d}" data-track-index="3"></video>')
         pop(f"#v{i}", st, "scale:0.86, y:60, opacity:0", "scale:1, y:0, opacity:1", 0.55, "expo.out")
         T.append(f'tl.to("#v{i}", {{scale:1.04, duration:{r3(max(d - 0.55, 0.1))}, ease:"none"}}, {r3(st + 0.55)});')
-        T.append(f'tl.fromTo("#glow{i}", {{x:-260, opacity:0}}, {{x:260, opacity:0.55, duration:{d}, ease:"sine.inOut"}}, {st});')
+        T.append(f'tl.fromTo("#glow{i}", {{x:-260, opacity:0}}, {{x:260, opacity:{STY["glow"]}, duration:{d}, ease:"sine.inOut"}}, {st});')
     elif s["kind"] == "graphic":
         # A graphics-only beat: the brand background, a drifting glow, and the overlay fills the frame.
         E.append(f'<div id="bg{i}" class="clip avbg" data-start="{st}" data-duration="{d}" data-track-index="1"></div>')
         E.append(f'<div id="glow{i}" class="clip glow gglow" data-start="{st}" data-duration="{d}" data-track-index="2"></div>')
         T.append(f'tl.fromTo("#bg{i}", {{backgroundPosition:"0px 0px"}}, {{backgroundPosition:"0px -108px", duration:{d}, ease:"none"}}, {st});')
-        T.append(f'tl.fromTo("#glow{i}", {{y:240, opacity:0.2}}, {{y:-240, opacity:0.6, duration:{d}, ease:"sine.inOut"}}, {st});')
+        T.append(f'tl.fromTo("#glow{i}", {{y:240, opacity:{r3(STY["glow"] * 0.35)}}}, {{y:-240, opacity:{r3(min(STY["glow"] * 1.1, 0.6))}, duration:{d}, ease:"sine.inOut"}}, {st});')
     else:
         E.append(f'<video id="v{i}" class="clip brvid" src="{s["clip"]}" muted playsinline data-start="{st}" data-duration="{d}" data-track-index="3"></video>')
         E.append(f'<div id="sh{i}" class="clip shade" data-start="{st}" data-duration="{d}" data-track-index="4"></div>')
@@ -319,8 +320,13 @@ def landed(o):
         if isinstance(node, dict):
             for k, v in node.items():
                 if isinstance(v, (int, float)) and (k == "at" or (k.endswith("At") and k != "fadeAt")):
-                    settle = 1.5 + 0.25 * sum(c.isdigit() for c in o.get("value", "")) if o["type"] == "counter" and k == "at" else 0.8
-                    hits.append(v + settle)
+                    if o["type"] == "counter" and k == "at":
+                        v += 1.5 + 0.25 * sum(c.isdigit() for c in o.get("value", ""))
+                    elif k == "fillAt":
+                        v += o.get("fillDur", 1.5) - 0.5
+                    elif k == "typeAt":
+                        v += o.get("typeDur", 1.0)
+                    hits.append(v + 0.8)
                 else:
                     walk(v)
         elif isinstance(node, list):
