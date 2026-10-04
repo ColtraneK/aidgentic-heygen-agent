@@ -14,7 +14,57 @@ Read first:
 
 ## When it can run
 
-It needs a session that can download files and run Node, Python and ffmpeg (a cloud or Project session can). Check with `node -v && python3 -V && ffmpeg -version`. If any is missing, say once: *"The animated finish needs a Project session. Here's your HeyGen video as it is."* Then hand over the HeyGen link and stop.
+The finish needs Node, Python, ffmpeg and a headless Chrome, and it downloads the render, GSAP, fonts and the renderer. **Claude Code** can do all of that: the Code tab in the desktop app with a folder on their computer, Claude Code in a terminal, or Claude Code on the web. **Cowork** usually can't, even in a Project: its sandbox has no ffmpeg or blocks those downloads. Everything before the finish (setup, plans, renders, the content plan, the routine) works in Cowork.
+
+Check first, with the render's `video_url`:
+
+```bash
+python3 ${CLAUDE_PLUGIN_ROOT}/skills/hyperframes-finish/template/preflight.py --video "<video_url>"
+```
+
+**READY:** carry on here.
+
+**HAND OFF:** don't try to install things or work around the sandbox. Write the handoff note (below), hand over the plain HeyGen video so they have something now, and tell them how to finish it in Claude Code:
+
+> Your video's ready in HeyGen: [video_page_url]. The animated finish needs Claude Code, because it runs a video renderer this session can't. I've saved everything it needs in `Finish handoff/[date] [angle]/`. To finish it:
+>
+> 1. Make a folder on your computer and put the `Finish handoff/[date] [angle]` folder in it.
+> 2. Open that folder in the **Code** tab of the Claude desktop app.
+> 3. Type: **finish the video in HANDOFF.md**
+>
+> Claude Code does the rest. The first time, it downloads the finish tools (about 400 MB, mostly a headless Chrome that draws the frames) into cache folders in your user account, and asks before installing anything else.
+>
+> The HeyGen links in it work for about a week.
+
+Give the steps once per person. After the first time, the line *"The finish is waiting in `Finish handoff/[date] [angle]/`: open it in Claude Code and say 'finish the video in HANDOFF.md'"* is enough.
+
+### The handoff note
+
+Write `Finish handoff/[date] [angle]/HANDOFF.md`, and copy `Video Profile.md` and the plan from `Video Plans/` beside it. Claude Code reads only what's in that folder, and it may not have HeyGen connected, so the note carries everything, in this shape:
+
+````markdown
+# Finish handoff: [title]
+
+Read this, `Video Profile.md` and `[plan].md`, then run the `hyperframes-finish` skill from the aidgentic-heygen-agent plugin, starting at step 2. If the plugin isn't installed here, don't ask the user to install it: clone https://github.com/ColtraneK/aidgentic-heygen-agent (public) next to this folder and follow `skills/hyperframes-finish/SKILL.md` from it. Run its `preflight.py` first. If ffmpeg or Node is missing, ask the user before installing it, saying what it is and why the finish needs it; never install anything system-wide without a yes. Everything from step 1 is below; HeyGen isn't needed. Save the results in this folder.
+
+- **Render:** [video_url] (expires about [date + 7 days])
+- **Captions:** [subtitle_url]
+- **HeyGen page:** [video_page_url]
+- **Scenes:** avatar [1,4,8] · graphics-only [5] · the rest b-roll
+- **Brand:** bg [hex] · fg [hex] · accent [hex] · on accent [hex] · logo [url] · heading font [name] · mono font [name]
+- **Style:** [style] · **Look:** [none, or the CSS file copied here] · **Speed:** [1] · **Sound effects:** [on/off]
+- **Music:** [audio_url from search_audio_sounds, or none]
+- **Graphics, other openings and custom moments:** in the plan's beat sheet
+- **Screen recordings:** [files copied here, or none]
+
+If a link has expired: with HeyGen connected here, get fresh ones with `get_video` on [video_id]; otherwise ask for them in the original Project.
+````
+
+Pick the music track before handing off, while HeyGen is connected, so Claude Code needs nothing from HeyGen. Log the render in `Video Log.md` as usual, with the finish as `handed off to Claude Code`.
+
+### Running from a handoff note
+
+In Claude Code, when they say "finish the video in HANDOFF.md", take step 1's inputs from the note and the files beside it, and do steps 2 to 6 there. Save the results next to the note (or into their Project's `Videos/` if this session can reach it) and tell them where. Without the plugin installed, clone the public repo (ColtraneK/aidgentic-heygen-agent) and use its `skills/hyperframes-finish/` template; never send the user off to install it. Before the first render on a computer, say in one line what will land on it: the finish scripts (the cloned repo, a few MB), the HyperFrames renderer and GSAP from npm (about 130 MB, in npm's cache) and a headless Chrome (about 260 MB, in `~/.cache/hyperframes`). These stay in the user's account and can be deleted afterwards. If preflight finds ffmpeg or Node missing, ask before installing them: *"The finish needs ffmpeg, a free video tool, to cut and mix the video. Can I install it with `brew install ffmpeg`?"* (`winget install ffmpeg` on Windows). Never install system-wide software without a yes. If a download is blocked, say which check failed. **Mac and Windows:** the commands here say `python3`; on Windows use whichever of `python3`, `python` or `py` runs Python 3. On a Mac without Homebrew, ask before installing Homebrew, or get ffmpeg another way they're happy with. Nothing else differs.
 
 Tell them what's happening and that it's free: *"Now I'm adding the motion graphics here. This part doesn't use credits and takes a few minutes."*
 

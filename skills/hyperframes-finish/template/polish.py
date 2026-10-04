@@ -83,7 +83,7 @@ def stems(work, inp, outdir):
             shutil.copy(os.path.join(assets, src), os.path.join(outdir, name))
             made.append(name)
     cues_path = os.path.join(work, "sfx-cues.json")
-    cues = json.load(open(cues_path))["cues"] if os.path.exists(cues_path) else []
+    cues = json.load(open(cues_path, encoding="utf-8"))["cues"] if os.path.exists(cues_path) else []
     if cues:
         ensure_sounds(work)
         dur = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration", "-of", "csv=p=0", inp]).stdout)
@@ -96,7 +96,7 @@ def stems(work, inp, outdir):
         run(["ffmpeg", "-y", "-loglevel", "error", *ins, "-filter_complex", ";".join(graph), "-map", "[out]", "-t", f"{dur:.3f}",
              os.path.join(outdir, "sound effects.wav")])
         made.append("sound effects.wav")
-    subs = os.path.join(work, json.load(open(os.path.join(work, "scenes.json"))).get("subs") or "subs.srt")
+    subs = os.path.join(work, json.load(open(os.path.join(work, "scenes.json"), encoding="utf-8")).get("subs") or "subs.srt")
     if os.path.exists(subs):
         shutil.copy(subs, os.path.join(outdir, "captions.srt"))
         made.append("captions.srt")
@@ -128,7 +128,7 @@ def main():
     if not a.out:
         raise SystemExit("pass --out")
 
-    fin = json.load(open(os.path.join(work, "finish.json")))
+    fin = json.load(open(os.path.join(work, "finish.json"), encoding="utf-8"))
     speed = a.speed or float(fin.get("speed", 1) or 1)
     if not 0.5 <= speed <= 2:
         raise SystemExit("speed must be between 0.5 and 2")
@@ -137,7 +137,7 @@ def main():
     if str(fin.get("sfx", "auto")).lower() != "off":
         if not os.path.exists(cues_path):
             raise SystemExit("no sfx-cues.json: run build.py first")
-        cues = json.load(open(cues_path))["cues"]
+        cues = json.load(open(cues_path, encoding="utf-8"))["cues"]
 
     inputs, graph = ["-i", a.inp], []
     if cues:

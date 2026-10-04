@@ -165,7 +165,7 @@ def main():
 
     fonts, logo, plate = install_assets(work, a.logo, a.heading_font, a.mono_font)
     out = {"duration": round(dur, 3), "scenes": scenes, "fonts": fonts, "logo": logo, "logoPlate": plate, "subs": "subs.srt"}
-    json.dump(out, open(os.path.join(work, "scenes.json"), "w"), indent=2)
+    json.dump(out, open(os.path.join(work, "scenes.json"), "w", encoding="utf-8"), indent=2)
     print(json.dumps(out, indent=2))
 
 if __name__ == "__main__":

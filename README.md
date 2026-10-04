@@ -14,7 +14,7 @@ Your videos use your avatar in several looks, your voice, b-roll generated for e
 
 **Videos with real variety.** A beat sheet for each video: your avatar on screen for the hook, the turn and the close, switching looks between lines, with generated b-roll showing everything else, and one clip of you acting in a scene. About 45 to 60 seconds, captions on.
 
-**An animated finish, free.** After the render, it adds motion graphics in your brand colours, logo and fonts: kinetic headlines, number counters, checklists, captions and a logo outro, with no letterboxing. Real screen recordings tilt in and zoom to each click, sound effects land on every cut and graphic, and the cut can run a touch faster if your voice reads slowly. Every video also gets one or two moments designed just for it, everything stays clear of the Reels and TikTok buttons, and if you send screenshots of a look you love, your videos take it on. The graphics are planned with the script, so you approve the words on screen with the same yes. Lines that are just a number or a list become full-screen graphics instead of generated clips, which saves their credits. At setup you pick one of three motion styles (Bold, Clean or Editorial), shown in your own brand. You see a preview of every graphic before the final cut. Music under the voice, alternative openings to test, and a cover for the post come with it. It's all built and rendered in your session with HyperFrames, so none of it uses credits, and changes are free too. To fix one scene, only that clip or line is made again in HeyGen and swapped in, so the rest of the video never re-renders. It needs a session that can run Node and ffmpeg, which a Project session can.
+**An animated finish, free.** After the render, it adds motion graphics in your brand colours, logo and fonts: kinetic headlines, number counters, checklists, captions and a logo outro, with no letterboxing. Real screen recordings tilt in and zoom to each click, sound effects land on every cut and graphic, and the cut can run a touch faster if your voice reads slowly. Every video also gets one or two moments designed just for it, everything stays clear of the Reels and TikTok buttons, and if you send screenshots of a look you love, your videos take it on. The graphics are planned with the script, so you approve the words on screen with the same yes. Lines that are just a number or a list become full-screen graphics instead of generated clips, which saves their credits. At setup you pick one of three motion styles (Bold, Clean or Editorial), shown in your own brand. You see a preview of every graphic before the final cut. Music under the voice, alternative openings to test, and a cover for the post come with it. It's all built and rendered with HyperFrames on your side, so none of it uses credits, and changes are free too. To fix one scene, only that clip or line is made again in HeyGen and swapped in, so the rest of the video never re-renders. The finish runs in Claude Code; see [Where it runs](#where-it-runs).
 
 **A cost before every render.** It checks your credit balance, estimates the video, and asks. Nothing that spends credits happens without your yes. After each render it measures what it actually cost and logs it, so the next estimate is yours, not a guess.
 
@@ -76,6 +76,40 @@ Then create a **Project** called `Video Agent` (Projects, in the left sidebar), 
 About twelve minutes, and nothing in setup spends credits.
 
 **Use a Project rather than a folder.** A scheduled routine runs in the cloud and can't reach a folder on your computer. In a Project, your routine can find your plan.
+
+---
+
+## Where it runs
+
+| | Cowork, in a Project | Claude Code |
+|---|---|---|
+| Setup, ideas, plans and costs | ✓ | ✓ |
+| Rendering in HeyGen | ✓ | ✓ |
+| Content plan and routine | ✓ | ✓ |
+| The animated HyperFrames finish | ✗ hands off to Claude Code | ✓ |
+
+**Why the finish needs Claude Code.** The finish renders the video on your side with a real video renderer: it runs Node, Python, ffmpeg and a headless Chrome, and downloads the renderer and your fonts. Cowork's sandbox doesn't have ffmpeg and blocks those downloads, so it can't run there. Claude Code can: the **Code** tab in the desktop app (with a folder on your computer), Claude Code in a terminal, or Claude Code on the web.
+
+**Starting in Cowork is fine.** Do setup, plans and renders there as usual. After each render, the agent checks whether the finish can run. If it can't, it gives you the plain HeyGen video straight away and saves a handoff folder with everything the finish needs. Then:
+
+1. Make a folder on your computer and put the handoff folder in it.
+2. Open that folder in the **Code** tab of the Claude desktop app.
+3. Type **finish the video in HANDOFF.md**.
+
+Claude Code does the rest, and there's no plugin to install there.
+
+**What the finish puts on your computer.** The first time, Claude Code downloads the finish scripts from this repo (a few MB), the HyperFrames renderer and the GSAP animation library from npm (about 130 MB) and a headless Chrome that draws the frames (about 260 MB). They go into folders in your own user account, not system-wide, and you can delete them afterwards (`~/.npm/_npx` and `~/.cache/hyperframes`). It also needs Node and ffmpeg (a free video tool). If either is missing, Claude Code asks before installing it, and the Code tab shows you each command before it runs. The finish only downloads; it renders on your computer and uploads nothing.
+
+It works the same on a Mac and on Windows.
+
+**Removing it later.** The easiest way is to ask Claude Code to remove the finish tools. To do it yourself:
+- The downloads are folders, not programs: delete `.npm/_npx` and `.cache/hyperframes` in your home folder.
+- ffmpeg: `brew uninstall ffmpeg` on a Mac, `winget uninstall ffmpeg` on Windows. It may not show in the installed programs list.
+- Node: on Windows, uninstall it from Settings, Apps. On a Mac, `brew uninstall node`, or the uninstall steps on nodejs.org if you used its installer.
+
+The finished video, its other openings and its cover are saved next to the note. The HeyGen links in the note work for about a week. No credits are spent in Claude Code; the finish is free.
+
+**Or do everything in Claude Code.** Install the plugin there (`/plugin marketplace add ColtraneK/aidgentic-heygen-agent`, then `/plugin install aidgentic-heygen-agent@aidgentic-heygen`), connect HeyGen with `/mcp`, and run `/video-setup` in a folder. Everything works in one place, but a scheduled routine can't reach a folder on your computer, so keep the routine in a Cowork Project.
 
 ---
 

@@ -102,7 +102,7 @@ Say what's happening and how long: *"Making your clips now, about a minute each,
 
 ## 6b. The finish
 
-If `Video Profile.md` has a **Finish** section saying HyperFrames, or they ask for more animation, follow the `hyperframes-finish` skill once the Studio render completes, with the graphics, hooks, style and music from the plan. It's built and rendered on this computer and spends no credits, so it needs no render yes. It shows them a preview sheet before the final cut. Hand over the finished file and the HeyGen link together, using that skill's hand-over in place of step 7's first two lines.
+If `Video Profile.md` has a **Finish** section saying HyperFrames, or they ask for more animation, follow the `hyperframes-finish` skill once the Studio render completes, with the graphics, hooks, style and music from the plan. It's built and rendered on this computer and spends no credits, so it needs no render yes. In a session that can't run it (Cowork usually can't), that skill's preflight says so: hand over the HeyGen video and the handoff note for Claude Code, as it describes. It shows them a preview sheet before the final cut. Hand over the finished file and the HeyGen link together, using that skill's hand-over in place of step 7's first two lines.
 
 ## 7. Hand it over
 
