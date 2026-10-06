@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.2 · October 2026
+
+- Setup checks HeyGen in the same message as the welcome. If HeyGen isn't connected, the four connect steps appear right away instead of waiting to be asked. It also searches for HeyGen tools that load lazily before deciding they're missing.
+- Less dead time in setup: independent calls run together, looks, voices and brand kits are pulled in the background during Step 1 so Step 3 is instant, and the website question is asked in the first message.
+- Before any slow step, setup says so and hands over one useful thing to do meanwhile in HeyGen (check the plan, add a look, find the first source, think about the audience).
+
 ## 1.2.1 · October 2026
 
 - Where it runs: the README has a table of what works in Cowork and in Claude Code. Everything works in Cowork except the HyperFrames finish, which needs Claude Code (Node, Python, ffmpeg, a headless Chrome and downloads that Cowork's sandbox blocks).
